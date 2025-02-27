@@ -54,7 +54,7 @@ $order_duration = $options['order_duration'] ?? '';
                                             class="wllp-settings-enable-conversion-label"><?php esc_html_e('Enable Current points based level', 'wllp-point-based-level'); ?></label>
                                 </div>
                                 <div class="wllp-input-field">
-                                    <select name="levels_from_which_point_based">
+                                    <select class="wllp-level-points-based" name="levels_from_which_point_based">
                                         <?php
                                             foreach ($level_based_on_options as $key =>  $name) {
                                                 ?>

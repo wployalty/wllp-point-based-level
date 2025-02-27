@@ -62,9 +62,3 @@ add_action('wlr_before_init', function () {
         }
     }
 });
-
-add_action('woocommerce_before_cart', function () {
-    \WLLP\App\Controllers\Actions::getOrderTotal([]);
-//    d(\WLLP\App\Controllers\Actions::getDateByString('-3 years'));
-});
-

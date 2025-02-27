@@ -53,7 +53,6 @@ jQuery(function ($) {
                     }
                 }
             });
-
         },
 
 
@@ -63,6 +62,15 @@ jQuery(function ($) {
                 wllp_functions.save_settings(this.closest('#wllp-settings_form'));
             });
 
+            $('#wllp-settings .wllp-level-points-based').change(function () {
+                let option  = $(this).val();
+                let section = $(this).closest('.wllp-setting-body').find('.wllp-order-field-inputs');
+                if (option == 'from_order_total') {
+                    section.show();
+                } else {
+                    section.hide();
+                }
+            });
         },
     }
 
