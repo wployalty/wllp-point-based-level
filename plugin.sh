@@ -20,7 +20,7 @@ copy_folder() {
   fi
   mkdir "$pack_folder"
   mkdir "$plugin_compress_folder"
-  move_dir=("App" "Assets" "vendor" "i18n" "composer.jon" $plugin_name".php")
+  move_dir=("App" "Assets" "vendor" "i18n" "composer.json" $plugin_name".php")
   # shellcheck disable=SC2068
   for dir in ${move_dir[@]}; do
     cp -r "$current_dir/$dir" "$plugin_compress_folder/$dir"

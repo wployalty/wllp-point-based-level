@@ -2,6 +2,8 @@
 
 namespace WLLP\App\Controllers;
 
+defined( 'ABSPATH' ) or die;
+
 use Wlr\App\Controllers\Admin\Labels;
 use Wlr\App\Helpers\Input;
 
@@ -165,7 +167,8 @@ class Controller
     }
 
     /**
-     * To
+     * To get the purchase time list.
+     *
      * @return array
      */
     public static function purchaseTimeList(): array

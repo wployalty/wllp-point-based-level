@@ -2,6 +2,8 @@
 
 namespace WLLP\App\Controllers;
 
+defined( 'ABSPATH' ) or die;
+
 use Wlr\App\Helpers\Settings;
 
 class Actions
@@ -31,6 +33,8 @@ class Actions
     }
 
     /**
+     * To change the points based on the settings.
+     *
      * @param int $points
      * @param $user
      *
@@ -52,6 +56,8 @@ class Actions
     }
 
     /**
+     * To change the points based on the settings.
+     *
      * @param int $points
      * @param $loyalty_user
      *
@@ -72,7 +78,13 @@ class Actions
         return $points;
     }
 
-    public static function getOrderTotal($fields)
+    /**
+     * To get total revenue.
+     *
+     * @param $fields
+     * @return int
+     */
+    public static function getOrderTotal($fields): int
     {
         if (is_object($fields) && isset($fields->user_email)) {
             $billing_email = $fields->user_email;
