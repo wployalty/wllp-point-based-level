@@ -1,12 +1,13 @@
 {
   "name": "wployalty/wllp-point-based-level",
-  "description": "Launcher widget for WPLoyalty. Let your customers easily discover your loyalty rewards.",
+  "description": "WPLoyalty Point based Rewards",
   "type": "project",
   "license": "GPL-2.0-or-later",
+  "require": {
+    "php": "7.4.*",
+    "yahnis-elsts/plugin-update-checker": "^v5.4"
+  },
   "autoload": {
-    "require": {
-      "php": "7.4.*",
-    },
     "psr-4": {
       "WLLP\\": ""
     }

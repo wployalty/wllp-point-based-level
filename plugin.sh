@@ -20,12 +20,19 @@ copy_folder() {
   fi
   mkdir "$pack_folder"
   mkdir "$plugin_compress_folder"
-  move_dir=("App" "Assets" "vendor" "i18n" $plugin_name".php")
+  move_dir=("App" "Assets" "vendor" "i18n" "composer.jon" $plugin_name".php")
   # shellcheck disable=SC2068
   for dir in ${move_dir[@]}; do
     cp -r "$current_dir/$dir" "$plugin_compress_folder/$dir"
   done
 }
+update_ini_file() {
+  cd $current_dir
+  wp i18n make-pot . "i18n/languages/$plugin_name.pot" --slug="$plugin_name" --domain="$plugin_name" --include=$plugin_name".php"
+  cd $current_dir
+  echo "Update ini done"
+}
+
 zip_folder() {
   cd "$pack_folder"
   rm "$plugin_name".zip
@@ -35,5 +42,6 @@ zip_folder() {
 }
 echo "Composer Run:"
 composer_run
+update_ini_file
 copy_folder
 zip_folder
