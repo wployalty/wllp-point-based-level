@@ -79,6 +79,29 @@ class Actions
     }
 
     /**
+     * To change the points based on the settings in launcher.
+     *
+     * @param int $points
+     * @param $user
+     *
+     * @return int|mixed
+     */
+    public static function changePointsToGetLevelInLauncher(int $points, $user)
+    {
+        $setting = Controller::getSetting('levels_from_which_point_based', '');
+
+        if ($setting == 'from_current_balance' && isset($user->points)) {
+            $points = $user->points;
+        } else if ($setting == 'from_points_redeemed' && isset($user->used_total_points)) {
+            $points = $user->used_total_points;
+        } else if ($setting == 'from_order_total') {
+            $points = self::getOrderTotal($user);
+        }
+
+        return $points;
+    }
+
+    /**
      * To get total revenue.
      *
      * @param $fields

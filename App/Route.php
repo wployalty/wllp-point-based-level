@@ -36,6 +36,8 @@ class Route
         add_filter('wlr_points_to_get_level_id', [Actions::class, 'changePointsToGetLevel'], 5, 3);
         add_filter('wlr_points_for_my_account_reward_page', [Actions::class, 'changePointsForMyAccountRewardPage'], 10, 2);
         add_filter('wlr_points_for_campaigns_list', [Actions::class, 'changePointsForCampaignsList'], 10, 2);
+
+        add_filter('wll_points_to_get_level', [Actions::class, 'changePointsToGetLevelInLauncher'], 10, 2);
     }
 
     /**
