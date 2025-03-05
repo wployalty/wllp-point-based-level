@@ -32,6 +32,22 @@ class Controller
     }
 
     /**
+     * To hide menu.
+     *
+     * @return void
+     */
+    public static function hideMenu()
+    {
+        ?>
+        <style>
+            #toplevel_page_wllp-point-based-level {
+                display: none !important;
+            }
+        </style>
+        <?php
+    }
+
+    /**
      * To load menu page.
      *
      * @return void
@@ -159,10 +175,10 @@ class Controller
     public static function levelBasedOnOptions(): array
     {
         return apply_filters('wllp_level_based_on_options', [
-            'from_current_balance' => __('From current balance', 'wllp-point-based-level'),
-            'from_total_earned_points' => __('From total earned points', 'wllp-point-based-level'),
-            'from_points_redeemed' => __('From points redeemed', 'wllp-point-based-level'),
-            'from_order_total' => __('From order total', 'wllp-point-based-level'),
+            'from_current_balance' => __('Current balance', 'wllp-point-based-level'),
+            'from_total_earned_points' => __('Total earned points', 'wllp-point-based-level'),
+            'from_points_redeemed' => __('Points redeemed', 'wllp-point-based-level'),
+            //'from_order_total' => __('Order total', 'wllp-point-based-level'),
         ]);
     }
 

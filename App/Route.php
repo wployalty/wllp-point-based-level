@@ -48,7 +48,7 @@ class Route
     private static function loadAdminHooks()
     {
         add_action('admin_menu', [Controller::class, 'addMenu']);
-        add_action('wp_footer', [Controller::class, 'hideMenu']);
+        add_action('admin_footer', [Controller::class, 'hideMenu']);
         add_action('admin_enqueue_scripts', [Controller::class, 'loadAssets']);
         add_action('wp_ajax_wllp_save_settings', [Controller::class, 'saveSettings']);
     }
