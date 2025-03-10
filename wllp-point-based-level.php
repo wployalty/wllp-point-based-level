@@ -6,6 +6,7 @@
  * Version: 1.0.0
  * Author: Wployalty
  * Slug: wllp-point-based-level
+ * Requires Plugins: woocommerce,wp-loyalty-rules
  * Text Domain: wllp-point-based-level
  * Domain Path: /i18n/languages/
  * Requires Plugins: woocommerce
