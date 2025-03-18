@@ -58,14 +58,24 @@ if (file_exists(WLLP_PLUGIN_PATH . '/vendor/autoload.php')) {
     require WLLP_PLUGIN_PATH . '/vendor/autoload.php';
 }
 
-add_action('wlr_before_init', function () {
-    if (defined('WLLP_PLUGIN_VERSION') && defined('WLLP_MINIMUM_WLR_VERSION')
-        && version_compare(WLLP_PLUGIN_VERSION, WLLP_MINIMUM_WLR_VERSION, '<=')
-    ) {
-        if (method_exists('\WLLP\App\Route', 'init')) {
-            do_action('wllp_before_init');
-            \WLLP\App\Route::init();
-            do_action('wllp_after_init');
+add_action('plugins_loaded', function () {
+    $myUpdateChecker = \YahnisElsts\PluginUpdateChecker\v5\PucFactory::buildUpdateChecker(
+        'https://github.com/wployalty/wllp-point-based-level',
+        __FILE__,
+        'wllp-point-based-level'
+    );
+    $myUpdateChecker->getVcsApi()->enableReleaseAssets();
+
+    add_action('wlr_before_init', function () {
+        if (defined('WLLP_PLUGIN_VERSION') && defined('WLLP_MINIMUM_WLR_VERSION')
+            && version_compare(WLLP_PLUGIN_VERSION, WLLP_MINIMUM_WLR_VERSION, '<=')
+        ) {
+            if (method_exists('\WLLP\App\Route', 'init')) {
+                do_action('wllp_before_init');
+                \WLLP\App\Route::init();
+                do_action('wllp_after_init');
+            }
         }
-    }
-});
+    });
+}, 5);
+
