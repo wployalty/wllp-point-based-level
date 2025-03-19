@@ -12,7 +12,7 @@
  * Requires Plugins: woocommerce
  * Requires at least: 4.9.0
  * WC requires at least: 6.5
- * WC tested up to: 9.6
+ * WC tested up to: 9.7
  * Contributors: Wployalty
  * Author URI: https://wployalty.net/
  * License: GPLv2 or later
@@ -45,7 +45,7 @@ defined( 'WLLP_PLUGIN_NAME' ) or define( 'WLLP_PLUGIN_NAME', 'WPLoyalty - Points
 defined( 'WLLP_MINIMUM_PHP_VERSION' ) or define( 'WLLP_MINIMUM_PHP_VERSION', '7.4.0' );
 defined( 'WLLP_MINIMUM_WP_VERSION' ) or define( 'WLLP_MINIMUM_WP_VERSION', '4.9' );
 defined( 'WLLP_MINIMUM_WC_VERSION' ) or define( 'WLLP_MINIMUM_WC_VERSION', '6.0' );
-defined( 'WLLP_MINIMUM_WLR_VERSION' ) or define( 'WLLP_MINIMUM_WLR_VERSION', '1.3.1' );
+defined( 'WLLP_MINIMUM_WLR_VERSION' ) or define( 'WLLP_MINIMUM_WLR_VERSION', '1.3.2' );
 defined( 'WLLP_PLUGIN_VERSION' ) or define( 'WLLP_PLUGIN_VERSION', '1.0.0' );
 defined( 'WLLP_PLUGIN_SLUG' ) or define( 'WLLP_PLUGIN_SLUG', 'wllp-point-based-level' );
 defined( 'WLLP_PLUGIN_FILE' ) or define( 'WLLP_PLUGIN_FILE', __FILE__ );
