@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: WPLoyalty - Points based level
+ * Plugin Name: WPLoyalty - Level Options
  * Plugin URI: https://www.wployalty.net
- * Description: Loyalty Rules and Referrals for WooCommerce. Turn your hard-earned sales into repeat purchases by rewarding your customers and building loyalty.
+ * Description: The add-on helps you customize levels or tiers based on specific options.
  * Version: 1.0.0
  * Author: Wployalty
  * Slug: wllp-point-based-level
@@ -41,7 +41,7 @@ add_action('before_woocommerce_init', function () {
     }
 });
 
-defined( 'WLLP_PLUGIN_NAME' ) or define( 'WLLP_PLUGIN_NAME', 'WPLoyalty - Points based level' );
+defined( 'WLLP_PLUGIN_NAME' ) or define( 'WLLP_PLUGIN_NAME', 'WPLoyalty - Level Options' );
 defined( 'WLLP_MINIMUM_PHP_VERSION' ) or define( 'WLLP_MINIMUM_PHP_VERSION', '7.4.0' );
 defined( 'WLLP_MINIMUM_WP_VERSION' ) or define( 'WLLP_MINIMUM_WP_VERSION', '4.9' );
 defined( 'WLLP_MINIMUM_WC_VERSION' ) or define( 'WLLP_MINIMUM_WC_VERSION', '6.0' );

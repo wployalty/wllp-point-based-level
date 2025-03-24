@@ -175,9 +175,9 @@ class Controller
     public static function levelBasedOnOptions(): array
     {
         return apply_filters('wllp_level_based_on_options', [
-            'from_current_balance' => __('Current balance', 'wllp-point-based-level'),
-            'from_total_earned_points' => __('Total earned points', 'wllp-point-based-level'),
-            'from_points_redeemed' => __('Points redeemed', 'wllp-point-based-level'),
+            'from_current_balance' => __('Points Balance', 'wllp-point-based-level'),
+            'from_total_earned_points' => __('Earned Points', 'wllp-point-based-level'),
+            'from_points_redeemed' => __('Redeemed Points', 'wllp-point-based-level'),
             //'from_order_total' => __('Order total', 'wllp-point-based-level'),
         ]);
     }
