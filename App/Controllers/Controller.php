@@ -93,7 +93,7 @@ class Controller
         if (!isset($_GET['page']) || empty($_GET['page'] || $_GET['page'] != WLLP_PLUGIN_SLUG)) {
             return;
         }
-
+	    remove_all_actions( 'admin_notices' );
         $suffix = '.min';
         if ( defined( 'SCRIPT_DEBUG' ) ) {
             $suffix = SCRIPT_DEBUG ? '' : '.min';
