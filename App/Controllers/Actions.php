@@ -90,7 +90,7 @@ class Actions {
 		}
 		$grace_model     = new GracePeriod();
 		$existing_record = $grace_model->getLatestRecordByEmail( $user_email );
-		$now             = (int) current_time( 'timestamp' );
+		$now             = strtotime( gmdate( 'Y-m-d H:i:s' ) );
 		//wc_get_logger()->add('wllp','Current timestamp: '. $now);
 		if ( is_object( $existing_record ) && ! empty( $existing_record ) && isset( $existing_record->level_valid_until ) && $existing_record->level_valid_until > $now ) {
 			//wc_get_logger()->add('wllp','Grace period is active for user: '. $user_email);
@@ -190,7 +190,7 @@ class Actions {
 			}
 
 			$minimum_points_to_maintain = isset( $new_level_obj->from_points ) ? (int) $new_level_obj->from_points : 0;
-			$now                        = (int) current_time( 'timestamp' );
+			$now                        = strtotime( gmdate( 'Y-m-d H:i:s' ) );
 			$valid_until                = $now + ( $grace_period_days * DAY_IN_SECONDS );
 			$data                       = [
 				'user_email'                 => sanitize_email( $user_data['user_email'] ),

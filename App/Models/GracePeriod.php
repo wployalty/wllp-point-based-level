@@ -53,7 +53,7 @@ class GracePeriod extends Base {
 			return false;
 		}
 		global $wpdb;
-		$where  = $wpdb->prepare( 'user_email = %s', [ $email ] );
+		$where  = $wpdb->prepare( 'user_email = %s', [ sanitize_email( $email ) ] );
 		$result = $this->getWhere( $where, '*', false );
 
 		return $result ? $result : false;
@@ -67,15 +67,14 @@ class GracePeriod extends Base {
 
 	public function truncateAllGracePeriods() {
 		$count = $this->getActiveGracePeriodCount();
-
-		$query = "TRUNCATE TABLE {$this->table}";
+		$query = self::$db->prepare("TRUNCATE TABLE {$this->table}");
 		self::$db->query($query);
 
 		return $count;
 	}
 
 	public function getActiveGracePeriodCount() {
-		$now = (int) current_time('timestamp');
+		$now = strtotime( gmdate( 'Y-m-d H:i:s' ) );
 		$where = self::$db->prepare('level_valid_until > %d', [$now]);
 		$result = $this->getWhere($where, 'COUNT(*) as count', true);
 
