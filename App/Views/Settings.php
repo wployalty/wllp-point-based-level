@@ -1,15 +1,17 @@
 <?php
 defined( 'ABSPATH' ) or die;
 
-if (!isset($options)) {
-    return;
+if ( ! isset( $options ) ) {
+	return;
 }
 
 $level_based_on_options = \WLLP\App\Controllers\Controller::levelBasedOnOptions() ?? [];
-$purchase_time_list = \WLLP\App\Controllers\Controller::purchaseTimeList() ?? [];
+$purchase_time_list     = \WLLP\App\Controllers\Controller::purchaseTimeList() ?? [];
 
 $levels_from_which_point_based = $options['levels_from_which_point_based'] ?? 'from_total_earned_points';
-$order_duration = $options['order_duration'] ?? '';
+$order_duration                = $options['order_duration'] ?? '';
+$grace_period_enabled          = $options['grace_period_enabled'] ?? 0;
+$grace_period_days             = $options['grace_period_days'] ?? 30;
 
 ?>
 <div id="wllp-main">
@@ -17,10 +19,17 @@ $order_duration = $options['order_duration'] ?? '';
         <h1><?php echo WLLP_PLUGIN_NAME; ?> </h1>
         <div><b><?php echo "v" . WLLP_PLUGIN_VERSION; ?></b></div>
     </div>
+    <div class="wllp-grace-period-warning" style="<?php if ( $grace_period_enabled != 1 )
+		echo 'display: none;' ?>">
+        <div class="wllp-notice-header">
+            <b><?php echo wp_kses_post( __( "Note: Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
+					'wllp-point-based-level' ) ) ?></b>
+        </div>
+    </div>
     <div class="wllp-tabs">
         <a class="nav-tab-active"
-           href="<?php echo esc_url(admin_url('admin.php?' . http_build_query(array('page' => WLLP_PLUGIN_SLUG)))) ?>"
-        ><i class="wlr wlrf-settings"></i><?php esc_html_e('Settings', 'wllp-point-based-level') ?></a>
+           href="<?php echo esc_url( admin_url( 'admin.php?' . http_build_query( [ 'page' => WLLP_PLUGIN_SLUG ] ) ) ) ?>"
+        ><i class="wlr wlrf-settings"></i><?php esc_html_e( 'Settings', 'wllp-point-based-level' ) ?></a>
     </div>
     <div>
         <div id="wllp-settings">
@@ -31,17 +40,17 @@ $order_duration = $options['order_duration'] ?? '';
                 <form id="wllp-settings_form" method="post">
                     <div class="wllp-settings-header">
                         <div class="wllp-setting-heading">
-                            <p><?php esc_html_e('SETTINGS', 'wllp-point-based-level') ?></p>
+                            <p><?php esc_html_e( 'SETTINGS', 'wllp-point-based-level' ) ?></p>
                         </div>
                         <div class="wllp-button-block">
                             <div class="wllp-back-to-apps wllp-button">
                                 <a class="button back-to-apps" target="_self"
-                                   href="<?php echo isset($app_url) ? esc_url($app_url) : '#'; ?>">
-                                    <?php esc_html_e('Back to WPLoyalty', 'wllp-point-based-level'); ?></a>
+                                   href="<?php echo isset( $app_url ) ? esc_url( $app_url ) : '#'; ?>">
+									<?php esc_html_e( 'Back to WPLoyalty', 'wllp-point-based-level' ); ?></a>
                             </div>
                             <div class="wllp-save-changes wllp-button">
                                 <a class="button" id="wllp-setting-submit-button">
-                                    <?php esc_html_e('Save Changes', 'wllp-point-based-level'); ?></a>
+									<?php esc_html_e( 'Save Changes', 'wllp-point-based-level' ); ?></a>
                             </div>
                             <span class='spinner'></span>
                         </div>
@@ -51,30 +60,55 @@ $order_duration = $options['order_duration'] ?? '';
                             <div class="wllp-field-block">
                                 <div>
                                     <label
-                                            class="wllp-settings-enable-conversion-label"><?php esc_html_e('Levels should be based on', 'wllp-point-based-level'); ?></label>
+                                            class="wllp-settings-enable-conversion-label"><?php esc_html_e( 'Levels should be based on',
+											'wllp-point-based-level' ); ?></label>
                                 </div>
                                 <div class="wllp-input-field">
                                     <select class="wllp-level-points-based" name="levels_from_which_point_based">
-                                        <?php
-                                            foreach ($level_based_on_options as $key =>  $name) {
-                                                ?>
-                                                    <option value="<?php echo $key; ?>" <?php echo $levels_from_which_point_based == $key ? 'selected="selected"' : ''; ?> >
-                                                        <?php esc_html_e($name, 'wllp-point-based-level'); ?>
-                                                    </option>
-                                                <?php
-                                            }
-                                        ?>
+										<?php
+										foreach ( $level_based_on_options as $key => $name ) {
+											?>
+                                            <option value="<?php echo $key; ?>" <?php echo $levels_from_which_point_based == $key ? 'selected="selected"' : ''; ?> >
+												<?php esc_html_e( $name, 'wllp-point-based-level' ); ?>
+                                            </option>
+											<?php
+										}
+										?>
                                     </select>
                                 </div>
-                                <div class="wllp-order-field-inputs" style="<?php  if ($levels_from_which_point_based != 'from_order_total') echo 'display: none;' ?>">
+                                <div class="wllp-order-field-inputs"
+                                     style="<?php if ( $levels_from_which_point_based != 'from_order_total' )
+									     echo 'display: none;' ?>">
                                     <div class="wllp-order-time-input">
                                         <select name="order_duration">
-                                            <?php foreach ($purchase_time_list as $list) { ?>
+											<?php foreach ( $purchase_time_list as $list ) { ?>
                                                 <option value="<?php echo $list['value']; ?>" <?php echo $order_duration == $list['value'] ? 'selected="selected"' : ''; ?>>
-                                                    <?php esc_html_e($list['label']);?>
+													<?php esc_html_e( $list['label'] ); ?>
                                                 </option>
-                                            <?php } ?>
+											<?php } ?>
                                         </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="wllp-field-block wllp-grace-period-section"
+                                 style="<?php if ( $levels_from_which_point_based != 'from_current_balance' )
+								     echo 'display: none;' ?>">
+                                <div>
+                                    <label class="wllp-settings-enable-conversion-label">
+                                        <input type="checkbox" name="grace_period_enabled"
+                                               value="1" <?php echo $grace_period_enabled == 1 ? 'checked="checked"' : ''; ?>
+                                               class="wllp-grace-period-checkbox">
+										<?php esc_html_e( 'Enable Grace Period', 'wllp-point-based-level' ); ?>
+                                    </label>
+                                </div>
+                                <div class="wllp-grace-period-days-input" style="<?php if ( $grace_period_enabled != 1 )
+									echo 'display: none;' ?>">
+                                    <div class="wllp-input-field">
+                                        <label for="grace_period_days"><?php esc_html_e( 'Grace Period Days',
+												'wllp-point-based-level' ); ?></label>
+                                        <input type="number" name="grace_period_days" id="grace_period_days"
+                                               value="<?php echo esc_attr( $grace_period_days ); ?>" min="1" max="365"
+                                               class="wllp-grace-period-days">
                                     </div>
                                 </div>
                             </div>

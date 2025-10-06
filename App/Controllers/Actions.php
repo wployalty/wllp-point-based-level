@@ -4,151 +4,297 @@ namespace WLLP\App\Controllers;
 
 defined( 'ABSPATH' ) or die;
 
+use WLLP\App\Models\GracePeriod;
 use Wlr\App\Helpers\Settings;
 
-class Actions
-{
+class Actions {
 
-    /**
-     * To change the points based on the settings.
-     *
-     * @param int $points
-     * @param array $user_fields
-     *
-     * @return int
-     */
-    public static function changePointsToGetLevel(int $points, array $user_fields): int
-    {
-        $setting = Controller::getSetting('levels_from_which_point_based', '');
+	/**
+	 * To change the points based on the settings.
+	 *
+	 * @param   int    $points
+	 * @param   array  $user_fields
+	 *
+	 * @return int
+	 */
+	public static function changePointsToGetLevel( int $points, array $user_fields ): int {
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		if ( ! $grace_period_enabled ) {
+			$points = self::resolvePointsBySetting( $points, $user_fields );
+		} else {
+			$points = self::getPointsBasedOnGracePeriod( $points, $user_fields );
+		}
 
-        if ($setting == 'from_current_balance' && isset($user_fields['points'])) {
-            $points = $user_fields['points'];
-        } else if ($setting == 'from_points_redeemed' && isset($user_fields['used_total_points'])) {
-            $points = $user_fields['used_total_points'];
-        } else if ($setting == 'from_order_total') {
-            $points = self::getOrderTotal($user_fields);
-        }
+		return $points;
+	}
 
-        return $points;
-    }
+	/**
+	 * Resolve points according to the configured source.
+	 * Falls back to the incoming $points when needed.
+	 *
+	 * @param   int    $points
+	 * @param   array  $user_fields
+	 *
+	 * @return int
+	 */
+	private static function resolvePointsBySetting( int $points, $fields ): int {
+		$setting = Controller::getSetting( 'levels_from_which_point_based', '' );
 
-    /**
-     * To change the points based on the settings.
-     *
-     * @param int $points
-     * @param $user
-     *
-     * @return int
-     */
-    public static function changePointsForMyAccountRewardPage(int $points, $user): int
-    {
-        $setting = Controller::getSetting('levels_from_which_point_based', '');
+		if ( $setting == 'from_current_balance' && self::hasField( $fields, 'points' ) ) {
+			return (int) self::getFieldValue( $fields, 'points', $points );
+		} elseif ( $setting == 'from_points_redeemed' && self::hasField( $fields, 'used_total_points' ) ) {
+			return (int) self::getFieldValue( $fields, 'used_total_points', $points );
+		} elseif ( $setting == 'from_order_total' ) {
+			return (int) self::getOrderTotal( $fields );
+		}
 
-        if ($setting == 'from_current_balance' && isset($user->points)) {
-            $points = $user->points;
-        } else if ($setting == 'from_points_redeemed' && isset($user->used_total_points)) {
-            $points = $user->used_total_points;
-        } else if ($setting == 'from_order_total') {
-            $points = self::getOrderTotal($user);
-        }
+		return (int) $points;
+	}
 
-        return $points;
-    }
+	/**
+	 * Safely check whether a field exists on array|object.
+	 *
+	 * @param   array|object  $fields
+	 */
+	private static function hasField( $fields, string $key ): bool {
+		if ( is_array( $fields ) ) {
+			return isset( $fields[ $key ] );
+		}
+		if ( is_object( $fields ) ) {
+			return isset( $fields->$key );
+		}
 
-    /**
-     * To change the points based on the settings.
-     *
-     * @param int $points
-     * @param $loyalty_user
-     *
-     * @return int
-     */
-    public static function changePointsForCampaignsList(int $points, $loyalty_user): int
-    {
-        $setting = Controller::getSetting('levels_from_which_point_based', '');
+		return false;
+	}
 
-        if ($setting == 'from_current_balance' && isset($loyalty_user->points)) {
-            $points = $loyalty_user->points;
-        } else if ($setting == 'from_points_redeemed' && isset($loyalty_user->used_total_points)) {
-            $points = $loyalty_user->used_total_points;
-        } else if ($setting == 'from_order_total') {
-            $points = self::getOrderTotal($loyalty_user);
-        }
+	/**
+	 * Safely get a field value from array|object.
+	 *
+	 * @param   array|object  $fields
+	 */
+	private static function getFieldValue( $fields, string $key, $default = null ) {
+		if ( is_array( $fields ) ) {
+			return isset( $fields[ $key ] ) ? $fields[ $key ] : $default;
+		}
+		if ( is_object( $fields ) ) {
+			return isset( $fields->$key ) ? $fields->$key : $default;
+		}
 
-        return $points;
-    }
+		return $default;
+	}
 
-    /**
-     * To change the points based on the settings in launcher.
-     *
-     * @param int $points
-     * @param $user
-     *
-     * @return int|mixed
-     */
-    public static function changePointsToGetLevelInLauncher(int $points, $user)
-    {
-        $setting = Controller::getSetting('levels_from_which_point_based', '');
+	public static function getPointsBasedOnGracePeriod( int $points, array $user_fields ) {
+		$user_email = $user_fields['user_email'] ?? '';
+		if ( empty( $user_email ) ) {
+			return $points;
+		}
+		$grace_model     = new GracePeriod();
+		$existing_record = $grace_model->getLatestRecordByEmail( $user_email );
+		$now             = (int) current_time( 'timestamp' );
+		//wc_get_logger()->add('wllp','Current timestamp: '. $now);
+		if ( is_object( $existing_record ) && ! empty( $existing_record ) && isset( $existing_record->level_valid_until ) && $existing_record->level_valid_until > $now ) {
+			//wc_get_logger()->add('wllp','Grace period is active for user: '. $user_email);
+			// Grace period active
+			$sorted_levels = Controller::sortActiveLevels();
+			if ( ! is_array( $sorted_levels ) || empty( $sorted_levels ) ) {
+				return $points;
+			}
+			$rank_by_id = [];
+			foreach ( $sorted_levels as $index => $level ) {
+				$rank_by_id[ $level->id ] = $index;
+			}
 
-        if ($setting == 'from_current_balance' && isset($user->points)) {
-            $points = $user->points;
-        } else if ($setting == 'from_points_redeemed' && isset($user->used_total_points)) {
-            $points = $user->used_total_points;
-        } else if ($setting == 'from_order_total') {
-            $points = self::getOrderTotal($user);
-        }
+			// Compute points to evaluate current level based on config
+			$points_to_eval = self::resolvePointsBySetting( $points, $user_fields );
 
-        return $points;
-    }
+			$levels_model     = new \Wlr\App\Models\Levels();
+			$current_level_id = $levels_model->getCurrentLevelId( (int) $points_to_eval );
 
-    /**
-     * To get total revenue.
-     *
-     * @param $fields
-     * @return int
-     */
-    public static function getOrderTotal($fields): int
-    {
-        if (is_object($fields) && isset($fields->user_email)) {
-            $billing_email = $fields->user_email;
-        } else {
-            if (isset($fields['user_email'])) {
-                $billing_email = $fields['user_email'];
-            }
-        }
+			$current_level_rank  = $rank_by_id[ $current_level_id ] ?? - 1;
+			$upgraded_level_rank = $rank_by_id[ $existing_record->upgraded_level_id ] ?? - 1;
 
-        if (empty($billing_email)) {
-            return 0;
-        }
+			if ( $current_level_rank >= 0 && $upgraded_level_rank >= 0 && $current_level_rank < $upgraded_level_rank ) {
+				// Below locked level: enforce minimum points to maintain
+				if ( isset( $existing_record->minimum_points_to_maintain ) ) {
+					$points = (int) $existing_record->minimum_points_to_maintain;
+				}
+			} elseif ( $current_level_rank === $upgraded_level_rank ) {
+				// At locked level: keep evaluated points
+				$points = (int) $points_to_eval;
+			}
+		} elseif ( ! empty( $existing_record ) && isset( $existing_record->level_valid_until ) && $existing_record->level_valid_until < $now ) {
+			$points = self::resolvePointsBySetting( $points, $user_fields );
+		} else {
+			// NO GRACE PERIOD RECORD EXISTS - should fall back to settings
+			$points = self::resolvePointsBySetting( $points, $user_fields );
+		}
+
+		//wc_get_logger()->add('wllp','Returning points: '. $points);
+		return $points;
+	}
+
+	public static function afterUserLevelChanged( $old_level_id, $user_data ) {
+
+		if ( ! is_array( $user_data ) || empty( $user_data['user_email'] ) ) {
+			return;
+		}
+
+		// Check if email exists it the grace period table
+		$levels = Controller::sortActiveLevels();
+
+		if ( ! isset( $levels ) || ! is_array( $levels ) || empty( $levels ) ) {
+			return;
+		}
+
+		$rank_by_id = [];
+		foreach ( $levels as $index => $level ) {
+			$rank_by_id[ $level->id ] = $index;
+		}
+
+		$new_level_id = isset( $user_data['level_id'] ) ? (int) $user_data['level_id'] : 0;
+
+		$old_level_rank = isset( $rank_by_id[ $old_level_id ] ) ? $rank_by_id[ $old_level_id ] : - 1;
+		$new_level_rank = $rank_by_id[ $new_level_id ];
+
+		$direction = 'same';
+
+		if ( $old_level_rank >= 0 && $new_level_rank > $old_level_rank ) {
+			$direction = 'up';
+		} elseif ( $old_level_rank >= 0 && $new_level_rank < $old_level_rank ) {
+			$direction = 'down';
+		} elseif ( $old_level_rank < 0 ) {
+			$direction = 'up';  // no prev lvl, so treat as up
+		}
+
+		// $levels variable has all the levels sorted in ascending order. If the current changed level is lower than the new level then we need to check for grace period
+
+		$grace_model     = new GracePeriod();
+		$existing_record = $grace_model->getLatestRecordByEmail( $user_data['user_email'] );
+
+		// On upgrade, compute once then update-if-exists else insert
+		if ( $direction === 'up' && $old_level_id !== $new_level_id ) {
+			$grace_period_days = (int) Controller::getSetting( 'grace_period_days', 30 );
+			if ( $grace_period_days <= 0 ) {
+				return;
+			}
+
+			$new_level_obj = null;
+			foreach ( $levels as $level ) {
+				if ( (int) $level->id === $new_level_id ) {
+					$new_level_obj = $level;
+					break;
+				}
+			}
+			if ( ! $new_level_obj ) {
+				return;
+			}
+
+			$minimum_points_to_maintain = isset( $new_level_obj->from_points ) ? (int) $new_level_obj->from_points : 0;
+			$now                        = (int) current_time( 'timestamp' );
+			$valid_until                = $now + ( $grace_period_days * DAY_IN_SECONDS );
+			$data                       = [
+				'user_email'                 => sanitize_email( $user_data['user_email'] ),
+				'upgraded_level_id'          => (int) $new_level_id,
+				'previous_level_id'          => (int) $old_level_id,
+				'level_valid_until'          => (int) $valid_until,
+				'minimum_points_to_maintain' => (int) $minimum_points_to_maintain,
+			];
+
+			if ( is_object( $existing_record ) && ! empty( $existing_record ) && isset( $existing_record->id ) ) {
+				$data['updated_at'] = (int) $now;
+				$data['created_at'] = (int) $existing_record->created_at;
+				$grace_model->updateRow( $data, [ 'id' => (int) $existing_record->id ] );
+			} else {
+				$data['created_at'] = (int) $now;
+				$grace_model->saveData( $data );
+			}
+		}
+	}
+
+	/**
+	 * To change the points based on the settings.
+	 *
+	 * @param   int  $points
+	 * @param        $user
+	 *
+	 * @return int
+	 */
+	public static function changePointsForMyAccountRewardPage( int $points, $user ): int {
+		return self::resolvePointsBySetting( $points, $user );
+	}
+
+	/**
+	 * To change the points based on the settings.
+	 *
+	 * @param   int  $points
+	 * @param        $loyalty_user
+	 *
+	 * @return int
+	 */
+	public static function changePointsForCampaignsList( int $points, $loyalty_user ): int {
+		return self::resolvePointsBySetting( $points, $loyalty_user );
+	}
+
+	/**
+	 * To change the points based on the settings in launcher.
+	 *
+	 * @param   int  $points
+	 * @param        $user
+	 *
+	 * @return int|mixed
+	 */
+	public static function changePointsToGetLevelInLauncher( int $points, $user ) {
+		return self::resolvePointsBySetting( $points, $user );
+	}
+
+	/**
+	 * To get total revenue.
+	 *
+	 * @param $fields
+	 *
+	 * @return int
+	 */
+	public static function getOrderTotal( $fields ): int {
+		if ( is_object( $fields ) && isset( $fields->user_email ) ) {
+			$billing_email = $fields->user_email;
+		} else {
+			if ( isset( $fields['user_email'] ) ) {
+				$billing_email = $fields['user_email'];
+			}
+		}
+
+		if ( empty( $billing_email ) ) {
+			return 0;
+		}
 
 
-        $order_duration = Controller::getSetting('order_duration', '');
-        $order_status = Settings::get('wlr_earning_status');
+		$order_duration = Controller::getSetting( 'order_duration', '' );
+		$order_status   = Settings::get( 'wlr_earning_status' );
 
-        $status_string = "'";
+		$status_string = "'";
 
-        if (!empty($order_status) && is_string($order_status)) {
-            $order_status = explode(',', $order_status);
-            foreach ($order_status as $status) {
-                $separator = next($order_status) ? "', '" : "'";
-                $status_string .= 'wc-'. $status . $separator;
-            }
-        }
+		if ( ! empty( $order_status ) && is_string( $order_status ) ) {
+			$order_status = explode( ',', $order_status );
+			foreach ( $order_status as $status ) {
+				$separator     = next( $order_status ) ? "', '" : "'";
+				$status_string .= 'wc-' . $status . $separator;
+			}
+		}
 
-        $time_stamp_from = self::getDateByString(str_replace('_', ' ', $order_duration), 'Y-m-d 00:00:00');
-        $time_stamp_to = self::getDateByString('now');
+		$time_stamp_from = self::getDateByString( str_replace( '_', ' ', $order_duration ), 'Y-m-d 00:00:00' );
+		$time_stamp_to   = self::getDateByString( 'now' );
 
-        if (Controller::customOrdersTableIsEnabled()) {
+		if ( Controller::customOrdersTableIsEnabled() ) {
 
-            $query = "SELECT SUM(wp_wc_orders.total_amount)
+			$query = "SELECT SUM(wp_wc_orders.total_amount)
                         FROM wp_wc_orders
                         WHERE billing_email LIKE '$billing_email'
                         AND status IN ({$status_string})
-                        AND date_created_gmt BETWEEN '$time_stamp_from' AND '$time_stamp_to'" ;
+                        AND date_created_gmt BETWEEN '$time_stamp_from' AND '$time_stamp_to'";
 
-        } else {
+		} else {
 
-            $query = "SELECT SUM(meta.meta_value) AS order_total
+			$query = "SELECT SUM(meta.meta_value) AS order_total
                         FROM wp_posts AS orders
                         JOIN wp_postmeta AS meta ON orders.ID = meta.post_id
                         JOIN wp_postmeta AS email_meta ON orders.ID = email_meta.post_id
@@ -157,31 +303,134 @@ class Actions
                         AND meta.meta_key = '_order_total'
                         AND email_meta.meta_key = '_billing_email'
                         AND email_meta.meta_value = '$billing_email'
-                        AND orders.post_date BETWEEN '$time_stamp_from' AND '$time_stamp_to'" ;
-        }
+                        AND orders.post_date BETWEEN '$time_stamp_from' AND '$time_stamp_to'";
+		}
 
-        global $wpdb;
-        return (int) $wpdb->get_var($query);
-    }
+		global $wpdb;
+
+		return (int) $wpdb->get_var( $query );
+	}
 
 
+	/**
+	 * Get date by a date or time string.
+	 *
+	 * @param   string  $modifier
+	 * @param   string  $format
+	 *
+	 * @return string|false
+	 */
+	public static function getDateByString( $modifier, $format = 'Y-m-d H:i:s' ) {
+		try {
+			$datetime = new \DateTime( 'now', wp_timezone() );
+			$datetime->modify( $modifier );
 
-    /**
-     * Get date by a date or time string.
-     *
-     * @param string $modifier
-     * @param string $format
-     * @return string|false
-     */
-    public static function getDateByString($modifier, $format = 'Y-m-d H:i:s')
-    {
-        try {
-            $datetime = new \DateTime('now', wp_timezone());
-            $datetime->modify($modifier);
-            return $datetime->format($format);
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
+			return $datetime->format( $format );
+		}
+		catch ( \Exception $e ) {
+			return false;
+		}
+	}
+
+	/**
+	 * After level save.
+	 *
+	 * @param   mixed  $post_data
+	 * @param   mixed  $level_id
+	 *
+	 * @return void
+	 */
+	public static function afterLevelSave( $post_data, $level_id ) {
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
+		if ( ! $grace_period_enabled ) {
+			return;
+		}
+
+		$is_edit = ! empty( $post_data['id'] ) && $post_data['id'] > 0;
+
+		if ( $is_edit ) {
+			$grace_model   = new GracePeriod();
+			$affected_rows = $grace_model->truncateAllGracePeriods();
+
+			wc_get_logger()->add( 'wllp_grace_period', sprintf(
+				'Grace period table truncated after level edit (ID: %d). %d records removed.',
+				$level_id,
+				$affected_rows
+			) );
+		}
+	}
+
+	/**
+	 * After level delete.
+	 *
+	 * @param   mixed  $level_id
+	 *
+	 * @return void
+	 */
+	public static function afterLevelDelete( $level_id ) {
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		if ( ! $grace_period_enabled ) {
+			return;
+		}
+
+		$grace_model    = new GracePeriod();
+		$affected_count = $grace_model->truncateAllGracePeriods();
+
+		wc_get_logger()->add( 'wllp_grace_period', sprintf(
+			'Grace period table truncated after level delete (ID: %d). %d records removed.',
+			$level_id,
+			$affected_count
+		) );
+	}
+
+	/**
+	 * After level toggle.
+	 *
+	 * @param   mixed  $level_id
+	 * @param   mixed  $active
+	 *
+	 * @return void
+	 */
+	public static function afterLevelToggle( $level_id, $active ) {
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		if ( ! $grace_period_enabled ) {
+			return;
+		}
+
+		$grace_model    = new GracePeriod();
+		$affected_count = $grace_model->truncateAllGracePeriods();
+
+		wc_get_logger()->add( 'wllp_grace_period', sprintf(
+			'Grace period table truncated after level toggle (ID: %d, Active: %d). %d records removed.',
+			$level_id,
+			$active,
+			$affected_count
+		) );
+	}
+
+	/**
+	 * After level bulk action.
+	 *
+	 * @param   mixed  $action_mode
+	 * @param   mixed  $level_id
+	 *
+	 * @return void
+	 */
+	public static function afterLevelBulkAction( $action_mode, $level_id ) {
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		if ( ! $grace_period_enabled ) {
+			return;
+		}
+
+		$grace_model    = new GracePeriod();
+		$affected_count = $grace_model->truncateAllGracePeriods();
+
+		wc_get_logger()->add( 'wllp_grace_period', sprintf(
+			'Grace period table truncated after bulk action (%s, ID: %d). %d records removed.',
+			$action_mode,
+			$level_id,
+			$affected_count
+		) );
+	}
 
 }
