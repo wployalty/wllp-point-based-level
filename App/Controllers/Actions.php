@@ -123,6 +123,8 @@ class Actions {
 				$points = (int) $points_to_eval;
 			}
 		} elseif ( ! empty( $existing_record ) && isset( $existing_record->level_valid_until ) && $existing_record->level_valid_until < $now ) {
+			// Grace period expired - delete the record and fall back to normal calculation
+			$grace_model->deleteRow( [ 'id' => (int) $existing_record->id ] );
 			$points = self::resolvePointsBySetting( $points, $user_fields );
 		} else {
 			// NO GRACE PERIOD RECORD EXISTS - should fall back to settings
