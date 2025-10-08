@@ -231,10 +231,10 @@ class Controller {
 				unset( $settings['order_duration'] );
 			}
 
-			$data = apply_filters( 'wllp_settings_data', [
+			$data     = apply_filters( 'wllp_settings_data', [
 				'levels_from_which_point_based' => $settings['levels_from_which_point_based'],
 			] );
-
+			$settings = self::addLevelsMetaData( $settings );
 			update_option( 'wllp_settings_data', $settings );
 
 			$response['error']   = false;
@@ -248,6 +248,51 @@ class Controller {
 
 		wp_send_json( $response );
 
+	}
+
+	public static function addLevelsMetaData( $data ) {
+		$level_model      = new Levels();
+		$available_levels = $level_model->getAll();
+
+		if ( empty( $available_levels ) ) {
+			return $data;
+		}
+
+		$levels_meta = [];
+		foreach ( $available_levels as $level ) {
+			$levels_meta[] = [
+				'level_id'    => (int) $level->id,
+				'from_points' => (int) $level->from_points,
+				'to_points'   => (int) $level->to_points,
+				'active'      => (int) $level->active,
+			];
+		}
+
+		$data['level_metadata'] = $levels_meta;
+
+		return $data;
+	}
+
+	/**
+	 * Find level by ID in metadata array
+	 *
+	 * @param   array  $levels_meta
+	 * @param   int    $level_id
+	 *
+	 * @return array|null
+	 */
+	public static function findLevelById( $levels_meta, $level_id ) {
+		if ( ! is_array( $levels_meta ) ) {
+			return null;
+		}
+
+		foreach ( $levels_meta as $level ) {
+			if ( isset( $level['level_id'] ) && (int) $level['level_id'] === (int) $level_id ) {
+				return $level;
+			}
+		}
+
+		return null;
 	}
 
 	/**

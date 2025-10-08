@@ -20,7 +20,7 @@ class Actions {
 	 * @return int
 	 */
 	public static function changePointsToGetLevel( int $points, array $user_fields ): int {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
 		if ( ! $grace_period_enabled ) {
 			$points = self::resolvePointsBySetting( $points, $user_fields );
 		} else {
@@ -353,14 +353,55 @@ class Actions {
 		$is_edit = ! empty( $post_data['id'] ) && $post_data['id'] > 0;
 
 		if ( $is_edit ) {
-			$grace_model   = new GracePeriod();
-			$affected_rows = $grace_model->truncateAllGracePeriods();
+			// Get current level data
+			$levels_model  = new \Wlr\App\Models\Levels();
+			$current_level = $levels_model->getQueryData(
+				[ 'id' => [ 'operator' => '=', 'value' => $level_id ] ],
+				'*', [], true
+			);
 
-			wc_get_logger()->add( 'wllp_grace_period', sprintf(
-				'Grace period table truncated after level edit (ID: %d). %d records removed.',
-				$level_id,
-				$affected_rows
-			) );
+			if ( ! $current_level ) {
+				return;
+			}
+
+
+			$stored_metadata = Controller::getSetting( 'level_metadata', [] );
+			$stored_level    = Controller::findLevelById( $stored_metadata, $level_id );
+
+			if ( ! $stored_level ) {
+				// Level not in stored metadata, reset grace periods
+				$grace_model   = new GracePeriod();
+				$affected_rows = $grace_model->truncateAllGracePeriods();
+
+				wc_get_logger()->add( 'wllp_grace_period', sprintf(
+					'Grace period table truncated after level edit (ID: %d) - level not in stored metadata. %d records removed.',
+					$level_id,
+					$affected_rows
+				) );
+				self::updateLevelMetadata();
+
+				return;
+			}
+
+			// Check if critical properties changed
+			$active_changed      = (int) $stored_level['active'] !== (int) $current_level->active;
+			$from_points_changed = (int) $stored_level['from_points'] !== (int) $current_level->from_points;
+			$to_points_changed   = (int) $stored_level['to_points'] !== (int) $current_level->to_points;
+
+			if ( $active_changed || $from_points_changed || $to_points_changed ) {
+				$grace_model   = new GracePeriod();
+				$affected_rows = $grace_model->truncateAllGracePeriods();
+
+				wc_get_logger()->add( 'wllp_grace_period', sprintf(
+					'Grace period table truncated after critical level edit (ID: %d). Changes: active=%s, from_points=%s, to_points=%s. %d records removed.',
+					$level_id,
+					$active_changed ? 'yes' : 'no',
+					$from_points_changed ? 'yes' : 'no',
+					$to_points_changed ? 'yes' : 'no',
+					$affected_rows
+				) );
+				self::updateLevelMetadata();
+			}
 		}
 	}
 
@@ -372,7 +413,7 @@ class Actions {
 	 * @return void
 	 */
 	public static function afterLevelDelete( $level_id ) {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
 		if ( ! $grace_period_enabled ) {
 			return;
 		}
@@ -385,6 +426,7 @@ class Actions {
 			$level_id,
 			$affected_count
 		) );
+		self::updateLevelMetadata();
 	}
 
 	/**
@@ -396,7 +438,7 @@ class Actions {
 	 * @return void
 	 */
 	public static function afterLevelToggle( $level_id, $active ) {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
 		if ( ! $grace_period_enabled ) {
 			return;
 		}
@@ -410,6 +452,7 @@ class Actions {
 			$active,
 			$affected_count
 		) );
+		self::updateLevelMetadata();
 	}
 
 	/**
@@ -421,7 +464,7 @@ class Actions {
 	 * @return void
 	 */
 	public static function afterLevelBulkAction( $action_mode, $level_id ) {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 1 ) == 1;
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
 		if ( ! $grace_period_enabled ) {
 			return;
 		}
@@ -438,12 +481,29 @@ class Actions {
 	}
 
 	/**
+	 * Update level metadata after grace period reset
+	 *
+	 * @return void
+	 */
+	private static function updateLevelMetadata() {
+		$current_settings = get_option( 'wllp_settings_data', [] );
+		$updated_settings = Controller::addLevelsMetaData( $current_settings );
+		update_option( 'wllp_settings_data', $updated_settings );
+
+		wc_get_logger()->add( 'wllp_grace_period', 'Level metadata updated after grace period reset.' );
+	}
+
+	/**
 	 * Display grace period to user
 	 *
 	 * @return void
 	 */
 
 	public static function displayGracePeriodToUser() {
+		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
+		if ( ! $grace_period_enabled ) {
+			return;
+		}
 		$user = wp_get_current_user();
 		if ( empty( $user ) ) {
 			return;
