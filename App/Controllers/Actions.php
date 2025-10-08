@@ -2,6 +2,8 @@
 
 namespace WLLP\App\Controllers;
 
+use Wlr\App\Models\Users;
+
 defined( 'ABSPATH' ) or die;
 
 use WLLP\App\Models\GracePeriod;
@@ -435,4 +437,88 @@ class Actions {
 		) );
 	}
 
+	/**
+	 * Display grace period to user
+	 *
+	 * @return void
+	 */
+
+	public static function displayGracePeriodToUser() {
+		$user = wp_get_current_user();
+		if ( empty( $user ) ) {
+			return;
+		}
+		$user_email = $user->user_email;
+		if ( empty( $user_email ) ) {
+			return;
+		}
+		$user_model = new Users();
+		$where      = [
+			'user_email' => [
+				'operator' => '=',
+				'value'    => $user->user_email
+			]
+		];
+
+		$loyalty_user = $user_model->getQueryData( $where, '*', [], true );
+		if ( ! is_object( $loyalty_user ) || ! isset( $loyalty_user->id ) || (int) $loyalty_user->id <= 0 ) {
+			return;
+		}
+
+		$grace_period_model = new GracePeriod();
+		$existing_record    = $grace_period_model->getLatestRecordByEmail( $user_email );
+		if ( ! is_object( $existing_record ) || ! isset( $existing_record->id ) || (int) $existing_record->id <= 0 ) {
+			return;
+		}
+
+		$now         = strtotime( gmdate( 'Y-m-d H:i:s' ) );
+		$valid_until = (int) $existing_record->level_valid_until;
+
+		if ( $valid_until <= $now ) {
+			//Grace period has expired
+			return;
+		}
+
+		$remaining_seconds = $valid_until - $now;
+		$remaining_days    = floor( $remaining_seconds / DAY_IN_SECONDS );
+
+		$levels_model  = new \Wlr\App\Models\Levels();
+		$where         = [
+			'id' => [
+				'operator' => '=',
+				'value'    => (int) $existing_record->upgraded_level_id
+			]
+		];
+		$current_level = $levels_model->getQueryData( $where, '*', [], true );
+
+		$current_level_name = is_object( $current_level ) && isset( $current_level->name ) ? $current_level->name : '';
+
+		$time_display = sprintf( _n( '%d day', '%d days', $remaining_days, 'wllp-point-based-level' ),
+			$remaining_days );
+
+		$template_data = [
+			'current_level_name' => $current_level_name,
+			'time_display'       => $time_display,
+			'minimum_points'     => (int) $existing_record->minimum_points_to_maintain,
+			'level_id'           => (int) $existing_record->upgraded_level_id,
+			'level_data'         => $current_level,
+		];
+
+		self::loadGracePeriodTemplate( $template_data );
+	}
+
+	/**
+	 * Load grace period template
+	 *
+	 * @param   array  $data  Template data
+	 *
+	 * @return void
+	 */
+	private static function loadGracePeriodTemplate( $data ) {
+		$file_path = get_theme_file_path( 'wllp-point-based-level/grace_period_display.php' );
+		if ( ! file_exists( $file_path ) ) {
+			$file_path = WLLP_PLUGIN_PATH . 'App/Views/Site/grace_period_display.php';
+		}
+		Controller::renderTemplate( $file_path, $data );
+	}
 }

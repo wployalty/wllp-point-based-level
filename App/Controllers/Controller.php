@@ -120,6 +120,45 @@ class Controller {
 		wp_localize_script( WLLP_PLUGIN_SLUG, 'wllp_localize_data', $localize_data );
 	}
 
+	/**
+	 * To load site assets.
+	 *
+	 * @return void
+	 */
+	public static function loadSiteAssets() {
+		if ( is_admin() ) {
+			return;
+		}
+
+		wp_enqueue_style( WLLP_PLUGIN_SLUG . '-site', WLLP_PLUGIN_URL . 'Assets/Site/Css/wllp-site.css', [],
+			WLLP_PLUGIN_VERSION );
+	}
+
+	/**
+	 * Render template with data
+	 *
+	 * @param   string  $file     Template file path
+	 * @param   array   $data     Template data
+	 * @param   bool    $display  Whether to display or return content
+	 *
+	 * @return string|void
+	 */
+	public static function renderTemplate( string $file, array $data = [], bool $display = true ) {
+		$content = '';
+		if ( file_exists( $file ) ) {
+			ob_start();
+			extract( $data );
+			include $file;
+			$content = ob_get_clean();
+		}
+		if ( $display ) {
+			//phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo $content;
+		} else {
+			return $content;
+		}
+	}
+
 	public static function sortActiveLevels( $sort_order = 'asc' ) {
 		if ( ! in_array( strtolower( $sort_order ), [ 'asc', 'desc' ] ) ) {
 			return false;

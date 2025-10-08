@@ -1,0 +1,66 @@
+/* Grace Period Styles */
+.wlr-grace-period-section {
+    margin: 20px 0;
+}
+
+.wlr-grace-period-box {
+    background: #ffffff;
+    border: 1px solid #CFCFCF;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 10px 0;
+}
+
+.wlr-grace-period-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.wlr-grace-period-icon {
+    flex-shrink: 0;
+}
+
+.wlr-grace-period-details h4 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.wlr-grace-period-details p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.wlr-grace-period-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-top: 15px;
+    padding: 12px;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 6px;
+}
+
+.wlr-grace-period-warning i {
+    font-size: 16px;
+    margin-top: 2px;
+}
+
+.wlr-grace-period-warning span {
+    font-size: 14px;
+    color: #856404;
+}
+
+@media (max-width: 768px) {
+    .wlr-grace-period-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .wlr-grace-period-icon {
+        align-self: center;
+    }
+}
+
