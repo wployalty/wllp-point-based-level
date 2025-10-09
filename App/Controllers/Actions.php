@@ -541,6 +541,10 @@ class Actions {
 
 		$remaining_seconds = $valid_until - $now;
 		$remaining_days    = floor( $remaining_seconds / DAY_IN_SECONDS );
+		
+		if ( $remaining_days == 0 ) {
+			$remaining_hours = floor( $remaining_seconds / HOUR_IN_SECONDS );
+		}
 
 		$levels_model  = new \Wlr\App\Models\Levels();
 		$where         = [
@@ -553,8 +557,13 @@ class Actions {
 
 		$current_level_name = is_object( $current_level ) && isset( $current_level->name ) ? $current_level->name : '';
 
-		$time_display = sprintf( _n( '%d day', '%d days', $remaining_days, 'wllp-point-based-level' ),
-			$remaining_days );
+		if ( ! empty( $remaining_hours ) && $remaining_days == 0 ) {
+			$time_display = sprintf( _n( '%d hour', '%d hours', $remaining_hours, 'wllp-point-based-level' ),
+				$remaining_hours );
+		} else {
+			$time_display = sprintf( _n( '%d day', '%d days', $remaining_days, 'wllp-point-based-level' ),
+				$remaining_days );
+		}
 
 		$template_data = [
 			'current_level_name' => $current_level_name,
