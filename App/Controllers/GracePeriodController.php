@@ -1,0 +1,411 @@
+<?php
+
+namespace WLLP\App\Controllers;
+
+defined( 'ABSPATH' ) or die;
+
+use WLLP\App\Models\GracePeriod;
+use Wlr\App\Helpers\Base;
+use Wlr\App\Models\Levels;
+
+class GracePeriodController {
+
+	/**
+	 * Filter points based on grace period logic
+	 *
+	 * @param   int    $points
+	 * @param   array  $user_fields
+	 *
+	 * @return int
+	 */
+	public static function filterPoints( int $points, array $user_fields ): int {
+		$user_email = $user_fields['user_email'] ?? '';
+		if ( empty( $user_email ) ) {
+			return $points;
+		}
+
+		// Prepare level data for comparisons
+		$rank_by_id         = self::buildRankMapping();
+		$points_to_eval     = Actions::resolvePointsBySetting( $points, $user_fields );
+		$levels_model       = new \Wlr\App\Models\Levels();
+		$current_level_id   = $levels_model->getCurrentLevelId( (int) $points_to_eval ); // 0 for no level
+		$current_level_rank = isset( $rank_by_id[ $current_level_id ] ) ? $rank_by_id[ $current_level_id ] : - 1; // -1 for no level
+		$grace_record       = self::getGracePeriodRecord( $user_email );
+		// 1) No grace record found, create one (inactive) based on current level, return normal points
+		if ( ! $grace_record ) {
+			if ( $current_level_id > 0 ) {
+				self::createGracePeriodRecord( [
+					'user_email'                 => $user_email,
+					'upgraded_level_id'          => (int) $current_level_id,
+					'level_valid_until'          => 0, // inactive until an actual degrade happens
+					'minimum_points_to_maintain' => (int) self::getLevelMinPoints( $current_level_id ),
+				] );
+			}
+
+			return (int) $points_to_eval;
+		}
+
+		// 5/3) Grace active → always maintain locked level
+		if ( self::isGracePeriodActive( $grace_record ) ) {
+			$locked_rank = isset( $rank_by_id[ $grace_record->upgraded_level_id ] ) ? $rank_by_id[ $grace_record->upgraded_level_id ] : - 1; // -1 for no level or level rank is returned
+			// 7) If upgraded above locked during active grace, update locked and reset grace (inactive)
+			if ( $current_level_rank >= 0 && $locked_rank >= 0 && $current_level_rank > $locked_rank ) {
+				self::updateGracePeriodRecord( $grace_record->id, [
+					'upgraded_level_id'          => (int) $current_level_id,
+					'level_valid_until'          => 0, // reset; new grace will start on next degrade
+					'minimum_points_to_maintain' => (int) self::getLevelMinPoints( $current_level_id ),
+				] );
+
+				// Return required points to maintain the new locked level
+				return (int) self::getLevelMinPoints( $current_level_id );
+			}
+
+			// 4/6) At or below locked during active grace → maintain locked level
+			return (int) $grace_record->minimum_points_to_maintain;
+		}
+
+		// If expired, clean up and proceed as inactive (treated like no grace)
+		if ( isset( $grace_record->level_valid_until ) && $grace_record->level_valid_until > 0 && $grace_record->level_valid_until < strtotime( gmdate( "Y-m-d H:i:s" ) ) ) {
+			self::deleteGracePeriodRecord( $grace_record->id );
+			$grace_record = null;
+
+			if ( $current_level_id > 0 ) {
+				self::createGracePeriodRecord( [
+					'user_email'                 => $user_email,
+					'upgraded_level_id'          => (int) $current_level_id,
+					'level_valid_until'          => 0, // inactive until an actual degrade happens
+					'minimum_points_to_maintain' => (int) self::getLevelMinPoints( $current_level_id ),
+				] );
+			}
+
+			return (int) $points_to_eval;
+		}
+
+		// 2) Inactive record exists
+		if ( $grace_record ) {
+			$highest_level = self::getHighestLevel();
+			if ( $highest_level ) {
+				$max_points = $highest_level->to_points ?? null;
+				if ( ! empty( $max_points ) && $points_to_eval > $max_points ) {
+					// Special case: User is going beyond level limit, so we need to delete the grace record and return the evaluated points
+					self::deleteGracePeriodRecord( $grace_record->id );
+
+					return (int) $points_to_eval;
+				}
+			}
+			$locked_rank = isset( $rank_by_id[ $grace_record->upgraded_level_id ] ) ? $rank_by_id[ $grace_record->upgraded_level_id ] : - 1;
+			//if degrading below locked, activate and maintain locked
+			if ( $current_level_rank >= 0 && $locked_rank >= 0 && $current_level_rank < $locked_rank ) {
+				$grace_period_days = (int) Controller::getSetting( 'grace_period_days', 30 );
+				if ( $grace_period_days > 0 ) {
+					$valid_until = strtotime( gmdate( "Y-m-d H:i:s" ) ) + ( $grace_period_days * DAY_IN_SECONDS );
+					self::updateGracePeriodRecord( $grace_record->id, [ 'level_valid_until' => (int) $valid_until ] );
+				}
+
+				return (int) $grace_record->minimum_points_to_maintain;
+			} elseif ( $current_level_id >= 0 && $locked_rank >= 0 && $current_level_rank === $locked_rank ) {
+
+				// If at locked level, maintain locked level
+				return (int) $grace_record->minimum_points_to_maintain;
+			} elseif ( $current_level_rank >= 0 && $locked_rank >= 0 && $current_level_rank > $locked_rank ) {
+				// If upgraded above locked, update locked and reset grace (inactive)
+				self::updateGracePeriodRecord( $grace_record->id, [
+					'upgraded_level_id'          => (int) $current_level_id,
+					'level_valid_until'          => 0, // reset; new grace will start
+					'minimum_points_to_maintain' => (int) self::getLevelMinPoints( $current_level_id ),
+				] );
+
+				// Return required points to maintain the new locked level
+				return (int) self::getLevelMinPoints( $current_level_id );
+			}
+		}
+
+		// 4/6 fallback: no active grace and not degrading → return evaluated points
+		return (int) $points_to_eval;
+	}
+
+	/**
+	 * Handle grace period logic after user level changes
+	 *
+	 * @param   int    $old_level_id
+	 * @param   array  $user_data
+	 *
+	 * @return void
+	 */
+	public static function afterLevelChanged( $old_level_id, $user_data ) {
+		$user_email   = $user_data['user_email'] ?? '';
+		$new_level_id = $user_data['level_id'] ?? 0;
+
+		if ( empty( $user_email ) ) {
+			return;
+		}
+
+		$grace_period_days = (int) Controller::getSetting( 'grace_period_days', 30 );
+		if ( $grace_period_days <= 0 ) {
+			return;
+		}
+
+		$grace_record = self::getGracePeriodRecord( $user_email );
+		$direction    = self::getLevelDirection( $old_level_id, $new_level_id );
+
+		// Check if existing grace period is expired and delete it
+		if ( $grace_record && ! self::isGracePeriodActive( $grace_record ) ) {
+			self::deleteGracePeriodRecord( $grace_record->id );
+			$grace_record = null; // Reset for further processing
+		}
+
+		if ( $direction === 'up' ) {
+			// UPGRADE: Update upgraded_level_id
+			if ( $grace_record ) {
+				// Update existing record
+				self::updateGracePeriodRecord( $grace_record->id, [
+					'upgraded_level_id'          => $new_level_id,
+					'level_valid_until'          => 0, // Keep inactive
+					'minimum_points_to_maintain' => self::getLevelMinPoints( $new_level_id )
+				] );
+			} else {
+				// Create new record
+				self::createGracePeriodRecord( [
+					'user_email'                 => $user_email,
+					'upgraded_level_id'          => $new_level_id,
+					'level_valid_until'          => 0, // Inactive
+					'minimum_points_to_maintain' => self::getLevelMinPoints( $new_level_id )
+				] );
+			}
+		}
+
+		if ( $direction === 'down' ) {
+			// DEGRADATION: Only handle new users (existing users handled by points filter)
+			if ( ! $grace_record ) {
+				// New user degrading - create grace record
+				$rank_by_id = self::buildRankMapping();
+				if ( ! empty( $rank_by_id ) ) {
+
+					$new_level_rank = $rank_by_id[ $new_level_id ] ?? - 1;
+					$old_level_rank = $rank_by_id[ $old_level_id ] ?? - 1;
+
+					// Check if user degraded below their previous level
+					if ( $new_level_rank >= 0 && $old_level_rank >= 0 && $new_level_rank < $old_level_rank ) {
+						// Create grace record with previous level as upgraded level
+						self::createGracePeriodRecord( [
+							'user_email'                 => $user_email,
+							'upgraded_level_id'          => $old_level_id,
+							// Previous level becomes upgraded level
+							'level_valid_until'          => strtotime( gmdate( "Y-m-d H:i:s" ) ) + ( $grace_period_days * DAY_IN_SECONDS ),
+							// Activate immediately
+							'minimum_points_to_maintain' => self::getLevelMinPoints( $old_level_id )
+						] );
+					}
+				}
+			}
+		}
+
+		// SPECIAL CASE: Upgrade during active grace period
+		if ( $direction === 'up' && $grace_record && self::isGracePeriodActive( $grace_record ) ) {
+			$rank_by_id = self::buildRankMapping();
+			if ( ! empty( $rank_by_id ) ) {
+
+				$new_level_rank      = $rank_by_id[ $new_level_id ] ?? - 1;
+				$upgraded_level_rank = $rank_by_id[ $grace_record->upgraded_level_id ] ?? - 1;
+
+				// Check if new level is higher than protected level (using rank comparison)
+				if ( $new_level_rank >= 0 && $upgraded_level_rank >= 0 && $new_level_rank > $upgraded_level_rank ) {
+					// New level is higher than protected level = unset grace period
+					self::deleteGracePeriodRecord( $grace_record->id );
+
+					// Create new record for this higher level
+					self::createGracePeriodRecord( [
+						'user_email'                 => $user_email,
+						'upgraded_level_id'          => $new_level_id,
+						'level_valid_until'          => 0, // Inactive
+						'minimum_points_to_maintain' => self::getLevelMinPoints( $new_level_id )
+					] );
+				}
+			}
+		}
+	}
+
+	/**
+	 * Get grace period record for user
+	 */
+	private static function getGracePeriodRecord( $user_email ) {
+		$grace_model = new GracePeriod();
+
+		return $grace_model->getLatestRecordByEmail( $user_email );
+	}
+
+	/**
+	 * Create new grace period record
+	 */
+	private static function createGracePeriodRecord( $data ) {
+		$grace_model = new GracePeriod();
+		$now         = strtotime( gmdate( "Y-m-d H:i:s" ) );
+
+		$record_data = [
+			'user_email'                 => sanitize_email( $data['user_email'] ),
+			'upgraded_level_id'          => (int) $data['upgraded_level_id'],
+			'level_valid_until'          => (int) $data['level_valid_until'],
+			'minimum_points_to_maintain' => (int) $data['minimum_points_to_maintain'],
+			'created_at'                 => $now,
+			'updated_at'                 => $now,
+		];
+
+		return $grace_model->saveData( $record_data );
+	}
+
+	/**
+	 * Update existing grace period record
+	 */
+	private static function updateGracePeriodRecord( $id, $data ) {
+		$grace_model = new GracePeriod();
+		$now         = strtotime( gmdate( "Y-m-d H:i:s" ) );
+
+		$update_data = [
+			'updated_at' => $now,
+		];
+
+		// Add only provided fields
+		if ( isset( $data['upgraded_level_id'] ) ) {
+			$update_data['upgraded_level_id'] = (int) $data['upgraded_level_id'];
+		}
+		if ( isset( $data['level_valid_until'] ) ) {
+			$update_data['level_valid_until'] = (int) $data['level_valid_until'];
+		}
+		if ( isset( $data['minimum_points_to_maintain'] ) ) {
+			$update_data['minimum_points_to_maintain'] = (int) $data['minimum_points_to_maintain'];
+		}
+
+		return $grace_model->updateRow( $update_data, [ 'id' => (int) $id ] );
+	}
+
+	/**
+	 * Delete grace period record
+	 */
+	private static function deleteGracePeriodRecord( $id ) {
+		$grace_model = new GracePeriod();
+
+		return $grace_model->deleteRow( [ 'id' => (int) $id ] );
+	}
+
+	/**
+	 * Get level direction (up/down/same)
+	 */
+	private static function getLevelDirection( $old_level_id, $new_level_id ) {
+		$rank_by_id = self::buildRankMapping();
+		if ( empty( $rank_by_id ) ) {
+			return 'same';
+		}
+
+		$old_rank = $rank_by_id[ $old_level_id ] ?? - 1;
+		$new_rank = $rank_by_id[ $new_level_id ] ?? - 1;
+
+		if ( $new_rank > $old_rank ) {
+			return 'up';
+		} elseif ( $new_rank < $old_rank ) {
+			return 'down';
+		} else {
+			return 'same';
+		}
+	}
+
+	/**
+	 * Get minimum points for a level
+	 */
+	private static function getLevelMinPoints( $level_id ) {
+		$levels = self::sortActiveLevels();
+		if ( ! is_array( $levels ) || empty( $levels ) ) {
+			return 0;
+		}
+
+		foreach ( $levels as $level ) {
+			if ( (int) $level->id === (int) $level_id ) {
+				return (int) $level->from_points;
+			}
+		}
+
+		return 0;
+	}
+
+	/**
+	 * Check if grace period is active
+	 */
+	private static function isGracePeriodActive( $grace_record ) {
+		if ( ! $grace_record || ! isset( $grace_record->level_valid_until ) ) {
+			return false;
+		}
+
+		$now       = strtotime( gmdate( "Y-m-d H:i:s" ) );
+		$is_active = $grace_record->level_valid_until > 0 && $grace_record->level_valid_until > $now;
+
+		return $is_active;
+	}
+
+	/**
+	 * Build rank mapping from active levels
+	 *
+	 * @return array
+	 */
+	private static function buildRankMapping() {
+		$levels        = self::sortActiveLevels();
+		$rank_by_id    = [];
+		$rank_by_id[0] = 0;
+		if ( is_array( $levels ) && ! empty( $levels ) ) {
+			foreach ( $levels as $index => $level ) {
+				$rank_by_id[ $level->id ] = $index + 1;
+			}
+		}
+
+		return $rank_by_id;
+	}
+
+	public static function sortActiveLevels( $sort_order = 'asc' ) {
+		if ( ! in_array( strtolower( $sort_order ), [ 'asc', 'desc' ] ) ) {
+			return false;
+		}
+
+		$level_helper = new Levels();
+		$base_helper  = new Base();
+
+		if ( ! $base_helper->isPro() ) {
+			return false;
+		}
+
+		global $wpdb;
+
+		$sort_direction = strtolower( $sort_order ) === 'asc' ? 'ASC' : 'DESC';
+
+		if ( $sort_direction === 'ASC' ) {
+			// For ascending order: sort by to_points ASC, but put to_points = 0 at the end
+			$where = $wpdb->prepare( '
+            active = %d
+            ORDER BY
+                CASE WHEN to_points = 0 THEN 1 ELSE 0 END ASC,
+                to_points ASC
+        ', 1 );
+		} else {
+			// For descending order: sort by to_points DESC, but put to_points = 0 at the beginning
+			$where = $wpdb->prepare( '
+            active = %d
+            ORDER BY
+                CASE WHEN to_points = 0 THEN 0 ELSE 1 END ASC,
+                to_points DESC
+        ', 1 );
+		}
+
+		$levels = $level_helper->getWhere( $where, '*', false );
+
+		return $levels;
+	}
+
+	public static function getHighestLevel() {
+		$levels = self::sortActiveLevels();
+
+		if ( ! is_array( $levels ) || empty( $levels ) ) {
+			return null;
+		}
+
+		return end( $levels );
+	}
+
+
+}

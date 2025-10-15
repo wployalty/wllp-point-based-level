@@ -36,7 +36,6 @@ class Route {
 			10, 2 );
 		add_filter( 'wlr_points_for_campaigns_list', [ Actions::class, 'changePointsForCampaignsList' ], 10, 2 );
 		add_filter( 'wll_points_to_get_level', [ Actions::class, 'changePointsToGetLevelInLauncher' ], 10, 2 );
-		add_action( 'wlr_after_user_level_changed', [ Actions::class, 'afterUserLevelChanged' ], 10, 2 );
 		add_action( 'wlr_before_customer_reward_page_referral_url_content',
 			[ Actions::class, 'displayGracePeriodToUser' ], 10 );
 		add_action( 'wp_enqueue_scripts', [ Controller::class, 'loadSiteAssets' ] );

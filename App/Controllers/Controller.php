@@ -55,7 +55,6 @@ class Controller {
 		$data = [
 			'options'              => get_option( 'wllp_settings_data', [] ),
 			'app_url'              => admin_url( 'admin.php?' . http_build_query( array( 'page' => WLR_PLUGIN_SLUG ) ) ) . '#/apps',
-			'highest_level'        => self::sortActiveLevels(),
 			'grace_period_enabled' => self::getSetting( 'grace_period_enabled', 0 ),
 			'grace_period_days'    => self::getSetting( 'grace_period_days', 30 ),
 		];
@@ -159,45 +158,6 @@ class Controller {
 		}
 	}
 
-	public static function sortActiveLevels( $sort_order = 'asc' ) {
-		if ( ! in_array( strtolower( $sort_order ), [ 'asc', 'desc' ] ) ) {
-			return false;
-		}
-
-		$level_helper = new Levels();
-		$base_helper  = new Base();
-
-		if ( ! $base_helper->isPro() ) {
-			return false;
-		}
-
-		global $wpdb;
-
-		$sort_direction = strtolower( $sort_order ) === 'asc' ? 'ASC' : 'DESC';
-
-		if ( $sort_direction === 'ASC' ) {
-			// For ascending order: sort by to_points ASC, but put to_points = 0 at the end
-			$where = $wpdb->prepare( '
-            active = %d
-            ORDER BY
-                CASE WHEN to_points = 0 THEN 1 ELSE 0 END ASC,
-                to_points ASC
-        ', 1 );
-		} else {
-			// For descending order: sort by to_points DESC, but put to_points = 0 at the beginning
-			$where = $wpdb->prepare( '
-            active = %d
-            ORDER BY
-                CASE WHEN to_points = 0 THEN 0 ELSE 1 END ASC,
-                to_points DESC
-        ', 1 );
-		}
-
-		$levels = $level_helper->getWhere( $where, '*', false );
-
-		return $levels;
-	}
-
 
 	/**
 	 * To save settings.
@@ -251,6 +211,14 @@ class Controller {
 	}
 
 	public static function addLevelsMetaData( $data ) {
+
+		if ( empty( $data['grace_period_enabled'] ) || $data['grace_period_enabled'] != '1' ) {
+			$data['grace_period_enabled'] = '0';
+			unset( $data['grace_period_days'] );
+
+			return $data;
+		}
+
 		$level_model      = new Levels();
 		$available_levels = $level_model->getAll();
 

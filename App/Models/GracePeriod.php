@@ -12,7 +12,6 @@ class GracePeriod extends Base {
 		$this->fields      = [
 			'user_email'                 => '%s',
 			'upgraded_level_id'          => '%d',
-			'previous_level_id'          => '%d',
 			'level_valid_until'          => '%d',
 			'minimum_points_to_maintain' => '%d',
 			'created_at'                 => '%d',
@@ -29,7 +28,6 @@ class GracePeriod extends Base {
 				`{$this->getPrimaryKey()}` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
 				`user_email` varchar(180) DEFAULT NULL,
 				`upgraded_level_id` BIGINT DEFAULT 0,
-				`previous_level_id` BIGINT DEFAULT 0,
 				`level_valid_until` BIGINT DEFAULT 0,
 				`minimum_points_to_maintain` BIGINT DEFAULT 0,
 				`created_at` BIGINT DEFAULT 0,
@@ -67,18 +65,18 @@ class GracePeriod extends Base {
 
 	public function truncateAllGracePeriods() {
 		$count = $this->getActiveGracePeriodCount();
-		$query = self::$db->prepare("TRUNCATE TABLE {$this->table}");
-		self::$db->query($query);
+		$query = self::$db->prepare( "TRUNCATE TABLE {$this->table}" );
+		self::$db->query( $query );
 
 		return $count;
 	}
 
 	public function getActiveGracePeriodCount() {
-		$now = strtotime( gmdate( 'Y-m-d H:i:s' ) );
-		$where = self::$db->prepare('level_valid_until > %d', [$now]);
-		$result = $this->getWhere($where, 'COUNT(*) as count', true);
+		$now    = strtotime( gmdate( 'Y-m-d H:i:s' ) );
+		$where  = self::$db->prepare( 'level_valid_until > %d', [ $now ] );
+		$result = $this->getWhere( $where, 'COUNT(*) as count', true );
 
-		return isset($result->count) ? (int) $result->count : 0;
+		return isset( $result->count ) ? (int) $result->count : 0;
 	}
 
 }

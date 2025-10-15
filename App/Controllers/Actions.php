@@ -22,12 +22,10 @@ class Actions {
 	public static function changePointsToGetLevel( int $points, array $user_fields ): int {
 		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
 		if ( ! $grace_period_enabled ) {
-			$points = self::resolvePointsBySetting( $points, $user_fields );
+			return self::resolvePointsBySetting( $points, $user_fields );
 		} else {
-			$points = self::getPointsBasedOnGracePeriod( $points, $user_fields );
+			return GracePeriodController::filterPoints( $points, $user_fields );
 		}
-
-		return $points;
 	}
 
 	/**
@@ -39,7 +37,7 @@ class Actions {
 	 *
 	 * @return int
 	 */
-	private static function resolvePointsBySetting( int $points, $fields ): int {
+	public static function resolvePointsBySetting( int $points, $fields ): int {
 		$setting = Controller::getSetting( 'levels_from_which_point_based', '' );
 
 		if ( $setting == 'from_current_balance' && self::hasField( $fields, 'points' ) ) {
@@ -83,136 +81,6 @@ class Actions {
 		}
 
 		return $default;
-	}
-
-	public static function getPointsBasedOnGracePeriod( int $points, array $user_fields ) {
-		$user_email = $user_fields['user_email'] ?? '';
-		if ( empty( $user_email ) ) {
-			return $points;
-		}
-		$grace_model     = new GracePeriod();
-		$existing_record = $grace_model->getLatestRecordByEmail( $user_email );
-		$now             = strtotime( gmdate( 'Y-m-d H:i:s' ) );
-		//wc_get_logger()->add('wllp','Current timestamp: '. $now);
-		if ( is_object( $existing_record ) && ! empty( $existing_record ) && isset( $existing_record->level_valid_until ) && $existing_record->level_valid_until > $now ) {
-			//wc_get_logger()->add('wllp','Grace period is active for user: '. $user_email);
-			// Grace period active
-			$sorted_levels = Controller::sortActiveLevels();
-			if ( ! is_array( $sorted_levels ) || empty( $sorted_levels ) ) {
-				return $points;
-			}
-			$rank_by_id = [];
-			foreach ( $sorted_levels as $index => $level ) {
-				$rank_by_id[ $level->id ] = $index;
-			}
-
-			// Compute points to evaluate current level based on config
-			$points_to_eval = self::resolvePointsBySetting( $points, $user_fields );
-
-			$levels_model     = new \Wlr\App\Models\Levels();
-			$current_level_id = $levels_model->getCurrentLevelId( (int) $points_to_eval );
-
-			$current_level_rank  = $rank_by_id[ $current_level_id ] ?? - 1;
-			$upgraded_level_rank = $rank_by_id[ $existing_record->upgraded_level_id ] ?? - 1;
-
-			if ( $current_level_rank >= 0 && $upgraded_level_rank >= 0 && $current_level_rank < $upgraded_level_rank ) {
-				// Below locked level: enforce minimum points to maintain
-				if ( isset( $existing_record->minimum_points_to_maintain ) ) {
-					$points = (int) $existing_record->minimum_points_to_maintain;
-				}
-			} elseif ( $current_level_rank === $upgraded_level_rank ) {
-				// At locked level: keep evaluated points
-				$points = (int) $points_to_eval;
-			}
-		} elseif ( ! empty( $existing_record ) && isset( $existing_record->level_valid_until ) && $existing_record->level_valid_until < $now ) {
-			// Grace period expired - delete the record and fall back to normal calculation
-			$grace_model->deleteRow( [ 'id' => (int) $existing_record->id ] );
-			$points = self::resolvePointsBySetting( $points, $user_fields );
-		} else {
-			// NO GRACE PERIOD RECORD EXISTS - should fall back to settings
-			$points = self::resolvePointsBySetting( $points, $user_fields );
-		}
-
-		//wc_get_logger()->add('wllp','Returning points: '. $points);
-		return $points;
-	}
-
-	public static function afterUserLevelChanged( $old_level_id, $user_data ) {
-
-		if ( ! is_array( $user_data ) || empty( $user_data['user_email'] ) ) {
-			return;
-		}
-
-		// Check if email exists it the grace period table
-		$levels = Controller::sortActiveLevels();
-
-		if ( ! isset( $levels ) || ! is_array( $levels ) || empty( $levels ) ) {
-			return;
-		}
-
-		$rank_by_id = [];
-		foreach ( $levels as $index => $level ) {
-			$rank_by_id[ $level->id ] = $index;
-		}
-
-		$new_level_id = isset( $user_data['level_id'] ) ? (int) $user_data['level_id'] : 0;
-
-		$old_level_rank = isset( $rank_by_id[ $old_level_id ] ) ? $rank_by_id[ $old_level_id ] : - 1;
-		$new_level_rank = $rank_by_id[ $new_level_id ];
-
-		$direction = 'same';
-
-		if ( $old_level_rank >= 0 && $new_level_rank > $old_level_rank ) {
-			$direction = 'up';
-		} elseif ( $old_level_rank >= 0 && $new_level_rank < $old_level_rank ) {
-			$direction = 'down';
-		} elseif ( $old_level_rank < 0 ) {
-			$direction = 'up';  // no prev lvl, so treat as up
-		}
-
-		// $levels variable has all the levels sorted in ascending order. If the current changed level is lower than the new level then we need to check for grace period
-
-		$grace_model     = new GracePeriod();
-		$existing_record = $grace_model->getLatestRecordByEmail( $user_data['user_email'] );
-
-		// On upgrade, compute once then update-if-exists else insert
-		if ( $direction === 'up' && $old_level_id !== $new_level_id ) {
-			$grace_period_days = (int) Controller::getSetting( 'grace_period_days', 30 );
-			if ( $grace_period_days <= 0 ) {
-				return;
-			}
-
-			$new_level_obj = null;
-			foreach ( $levels as $level ) {
-				if ( (int) $level->id === $new_level_id ) {
-					$new_level_obj = $level;
-					break;
-				}
-			}
-			if ( ! $new_level_obj ) {
-				return;
-			}
-
-			$minimum_points_to_maintain = isset( $new_level_obj->from_points ) ? (int) $new_level_obj->from_points : 0;
-			$now                        = strtotime( gmdate( 'Y-m-d H:i:s' ) );
-			$valid_until                = $now + ( $grace_period_days * DAY_IN_SECONDS );
-			$data                       = [
-				'user_email'                 => sanitize_email( $user_data['user_email'] ),
-				'upgraded_level_id'          => (int) $new_level_id,
-				'previous_level_id'          => (int) $old_level_id,
-				'level_valid_until'          => (int) $valid_until,
-				'minimum_points_to_maintain' => (int) $minimum_points_to_maintain,
-			];
-
-			if ( is_object( $existing_record ) && ! empty( $existing_record ) && isset( $existing_record->id ) ) {
-				$data['updated_at'] = (int) $now;
-				$data['created_at'] = (int) $existing_record->created_at;
-				$grace_model->updateRow( $data, [ 'id' => (int) $existing_record->id ] );
-			} else {
-				$data['created_at'] = (int) $now;
-				$grace_model->saveData( $data );
-			}
-		}
 	}
 
 	/**
@@ -541,7 +409,7 @@ class Actions {
 
 		$remaining_seconds = $valid_until - $now;
 		$remaining_days    = floor( $remaining_seconds / DAY_IN_SECONDS );
-		
+
 		if ( $remaining_days == 0 ) {
 			$remaining_hours = floor( $remaining_seconds / HOUR_IN_SECONDS );
 		}
