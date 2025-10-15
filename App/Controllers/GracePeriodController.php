@@ -47,9 +47,14 @@ class GracePeriodController {
 
 		// 5/3) Grace active → always maintain locked level
 		if ( self::isGracePeriodActive( $grace_record ) ) {
+			if ( self::isAboveMaxLevel( $points_to_eval ) ) {
+				self::deleteGracePeriodRecord( $grace_record->id );
+
+				return (int) $points_to_eval;
+			}
 			$locked_rank = isset( $rank_by_id[ $grace_record->upgraded_level_id ] ) ? $rank_by_id[ $grace_record->upgraded_level_id ] : - 1; // -1 for no level or level rank is returned
 			// 7) If upgraded above locked during active grace, update locked and reset grace (inactive)
-			if ( $current_level_rank >= 0 && $locked_rank >= 0 && $current_level_rank > $locked_rank ) {
+			if ( self::shouldUpdateLockedLevel( $current_level_rank, $locked_rank ) ) {
 				self::updateGracePeriodRecord( $grace_record->id, [
 					'upgraded_level_id'          => (int) $current_level_id,
 					'level_valid_until'          => 0, // reset; new grace will start on next degrade
@@ -83,19 +88,14 @@ class GracePeriodController {
 
 		// 2) Inactive record exists
 		if ( $grace_record ) {
-			$highest_level = self::getHighestLevel();
-			if ( $highest_level ) {
-				$max_points = $highest_level->to_points ?? null;
-				if ( ! empty( $max_points ) && $points_to_eval > $max_points ) {
-					// Special case: User is going beyond level limit, so we need to delete the grace record and return the evaluated points
-					self::deleteGracePeriodRecord( $grace_record->id );
+			if ( self::isAboveMaxLevel( $points_to_eval ) ) {
+				self::deleteGracePeriodRecord( $grace_record->id );
 
-					return (int) $points_to_eval;
-				}
+				return (int) $points_to_eval;
 			}
 			$locked_rank = isset( $rank_by_id[ $grace_record->upgraded_level_id ] ) ? $rank_by_id[ $grace_record->upgraded_level_id ] : - 1;
 			//if degrading below locked, activate and maintain locked
-			if ( $current_level_rank >= 0 && $locked_rank >= 0 && $current_level_rank < $locked_rank ) {
+			if ( self::shouldActivateGracePeriod( $current_level_rank, $locked_rank ) ) {
 				$grace_period_days = (int) Controller::getSetting( 'grace_period_days', 30 );
 				if ( $grace_period_days > 0 ) {
 					$valid_until = strtotime( gmdate( "Y-m-d H:i:s" ) ) + ( $grace_period_days * DAY_IN_SECONDS );
@@ -103,11 +103,10 @@ class GracePeriodController {
 				}
 
 				return (int) $grace_record->minimum_points_to_maintain;
-			} elseif ( $current_level_id >= 0 && $locked_rank >= 0 && $current_level_rank === $locked_rank ) {
-
+			} elseif ( self::shouldMaintainLockedLevel( $current_level_rank, $locked_rank ) ) {
 				// If at locked level, maintain locked level
 				return (int) $grace_record->minimum_points_to_maintain;
-			} elseif ( $current_level_rank >= 0 && $locked_rank >= 0 && $current_level_rank > $locked_rank ) {
+			} elseif ( self::shouldUpdateLockedLevel( $current_level_rank, $locked_rank ) ) {
 				// If upgraded above locked, update locked and reset grace (inactive)
 				self::updateGracePeriodRecord( $grace_record->id, [
 					'upgraded_level_id'          => (int) $current_level_id,
@@ -122,6 +121,28 @@ class GracePeriodController {
 
 		// 4/6 fallback: no active grace and not degrading → return evaluated points
 		return (int) $points_to_eval;
+	}
+
+	private static function shouldActivateGracePeriod( $current_rank, $locked_rank ): bool {
+		return $current_rank >= 0 && $locked_rank >= 0 && $current_rank < $locked_rank;
+	}
+
+	private static function shouldUpdateLockedLevel( $current_rank, $locked_rank ): bool {
+		return $current_rank >= 0 && $locked_rank >= 0 && $current_rank > $locked_rank;
+	}
+
+	private static function shouldMaintainLockedLevel( $current_rank, $locked_rank ): bool {
+		return $current_rank >= 0 && $locked_rank >= 0 && $current_rank === $locked_rank;
+	}
+
+	private static function isAboveMaxLevel( $points ): bool {
+		$highest_level = self::getHighestLevel();
+		if ( ! $highest_level ) {
+			return $points;
+		}
+		$max_points = $highest_level->to_points ?? null;
+
+		return ! empty( $max_points ) && $points > $max_points;
 	}
 
 	/**
@@ -184,27 +205,6 @@ class GracePeriodController {
 		$grace_model = new GracePeriod();
 
 		return $grace_model->deleteRow( [ 'id' => (int) $id ] );
-	}
-
-	/**
-	 * Get level direction (up/down/same)
-	 */
-	private static function getLevelDirection( $old_level_id, $new_level_id ) {
-		$rank_by_id = self::buildRankMapping();
-		if ( empty( $rank_by_id ) ) {
-			return 'same';
-		}
-
-		$old_rank = $rank_by_id[ $old_level_id ] ?? - 1;
-		$new_rank = $rank_by_id[ $new_level_id ] ?? - 1;
-
-		if ( $new_rank > $old_rank ) {
-			return 'up';
-		} elseif ( $new_rank < $old_rank ) {
-			return 'down';
-		} else {
-			return 'same';
-		}
 	}
 
 	/**
