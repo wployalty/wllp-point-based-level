@@ -11,6 +11,7 @@ defined( 'ABSPATH' ) or die;
 $current_level_name = $current_level_name ?? '';
 $time_display       = $time_display ?? __( '0 days', 'wllp-point-based-level' );
 $minimum_points     = $minimum_points ?? 0;
+$maximum_points     = $maximum_points ?? 0;
 $level_id           = $level_id ?? 0;
 $level_data         = $level_data ?? null;
 
@@ -43,9 +44,10 @@ $level_check = isset( $level_data ) && is_object( $level_data ) && isset( $level
                     <p class="wlr-text-color">
 						<?php
 						printf(
-							esc_html__( 'To maintain this level, you need %d points by the end of the grace period.',
+							esc_html__( 'To maintain this level, you need to maintain your points between %d to %d by the end of the grace period.',
 								'wllp-point-based-level' ),
-							(int) $minimum_points
+							(int) $minimum_points,
+							(int) $maximum_points
 						);
 						?>
                     </p>

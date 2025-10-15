@@ -240,12 +240,6 @@ class Actions {
 				// Level not in stored metadata, reset grace periods
 				$grace_model   = new GracePeriod();
 				$affected_rows = $grace_model->truncateAllGracePeriods();
-
-				wc_get_logger()->add( 'wllp_grace_period', sprintf(
-					'Grace period table truncated after level edit (ID: %d) - level not in stored metadata. %d records removed.',
-					$level_id,
-					$affected_rows
-				) );
 				self::updateLevelMetadata();
 
 				return;
@@ -259,15 +253,6 @@ class Actions {
 			if ( $active_changed || $from_points_changed || $to_points_changed ) {
 				$grace_model   = new GracePeriod();
 				$affected_rows = $grace_model->truncateAllGracePeriods();
-
-				wc_get_logger()->add( 'wllp_grace_period', sprintf(
-					'Grace period table truncated after critical level edit (ID: %d). Changes: active=%s, from_points=%s, to_points=%s. %d records removed.',
-					$level_id,
-					$active_changed ? 'yes' : 'no',
-					$from_points_changed ? 'yes' : 'no',
-					$to_points_changed ? 'yes' : 'no',
-					$affected_rows
-				) );
 				self::updateLevelMetadata();
 			}
 		}
@@ -288,12 +273,6 @@ class Actions {
 
 		$grace_model    = new GracePeriod();
 		$affected_count = $grace_model->truncateAllGracePeriods();
-
-		wc_get_logger()->add( 'wllp_grace_period', sprintf(
-			'Grace period table truncated after level delete (ID: %d). %d records removed.',
-			$level_id,
-			$affected_count
-		) );
 		self::updateLevelMetadata();
 	}
 
@@ -313,13 +292,6 @@ class Actions {
 
 		$grace_model    = new GracePeriod();
 		$affected_count = $grace_model->truncateAllGracePeriods();
-
-		wc_get_logger()->add( 'wllp_grace_period', sprintf(
-			'Grace period table truncated after level toggle (ID: %d, Active: %d). %d records removed.',
-			$level_id,
-			$active,
-			$affected_count
-		) );
 		self::updateLevelMetadata();
 	}
 
@@ -339,13 +311,6 @@ class Actions {
 
 		$grace_model    = new GracePeriod();
 		$affected_count = $grace_model->truncateAllGracePeriods();
-
-		wc_get_logger()->add( 'wllp_grace_period', sprintf(
-			'Grace period table truncated after bulk action (%s, ID: %d). %d records removed.',
-			$action_mode,
-			$level_id,
-			$affected_count
-		) );
 	}
 
 	/**
@@ -357,8 +322,6 @@ class Actions {
 		$current_settings = get_option( 'wllp_settings_data', [] );
 		$updated_settings = Controller::addLevelsMetaData( $current_settings );
 		update_option( 'wllp_settings_data', $updated_settings );
-
-		wc_get_logger()->add( 'wllp_grace_period', 'Level metadata updated after grace period reset.' );
 	}
 
 	/**
@@ -436,7 +399,8 @@ class Actions {
 		$template_data = [
 			'current_level_name' => $current_level_name,
 			'time_display'       => $time_display,
-			'minimum_points'     => (int) $existing_record->minimum_points_to_maintain,
+			'minimum_points'     => (int) $current_level->from_points,
+			'maximum_points'     => (int) $current_level->to_points,
 			'level_id'           => (int) $existing_record->upgraded_level_id,
 			'level_data'         => $current_level,
 		];
