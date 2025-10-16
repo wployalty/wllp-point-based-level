@@ -63,7 +63,8 @@ class Controller {
 		extract( $data );
 		include WLLP_PLUGIN_PATH . 'App/Views/Settings.php';
 		$html = ob_get_clean();
-		echo wp_kses_post( $html );
+
+		echo $html;
 	}
 
 	/**
