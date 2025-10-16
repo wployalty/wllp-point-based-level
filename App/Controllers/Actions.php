@@ -180,6 +180,7 @@ class Actions {
 
 		global $wpdb;
 
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching,WordPress.DB.PreparedSQL.NotPrepared
 		return (int) $wpdb->get_var( $query );
 	}
 
@@ -389,9 +390,11 @@ class Actions {
 		$current_level_name = is_object( $current_level ) && isset( $current_level->name ) ? $current_level->name : '';
 
 		if ( ! empty( $remaining_hours ) && $remaining_days == 0 ) {
+			/* translators: %d: remaining hours */
 			$time_display = sprintf( _n( '%d hour', '%d hours', $remaining_hours, 'wllp-point-based-level' ),
 				$remaining_hours );
 		} else {
+			/* translators: %d: remaining days */
 			$time_display = sprintf( _n( '%d day', '%d days', $remaining_days, 'wllp-point-based-level' ),
 				$remaining_days );
 		}

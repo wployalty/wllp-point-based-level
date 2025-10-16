@@ -16,7 +16,7 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
 ?>
 <div id="wllp-main">
     <div class="wllp-main-header">
-        <h1><?php echo WLLP_PLUGIN_NAME; ?> </h1>
+        <h1><?php echo esc_html__('WPLoyalty - Level Options', 'wllp-point-based-level'); ?> </h1>
         <div><b><?php echo "v" . WLLP_PLUGIN_VERSION; ?></b></div>
     </div>
     <div class="wllp-grace-period-warning" style="<?php if ( $grace_period_enabled != 1 )
@@ -68,8 +68,8 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
 										<?php
 										foreach ( $level_based_on_options as $key => $name ) {
 											?>
-                                            <option value="<?php echo $key; ?>" <?php echo $levels_from_which_point_based == $key ? 'selected="selected"' : ''; ?> >
-												<?php esc_html_e( $name, 'wllp-point-based-level' ); ?>
+                                            <option value="<?php echo esc_attr( $key ); ?>" <?php echo $levels_from_which_point_based == $key ? 'selected="selected"' : ''; ?> >
+												<?php echo esc_html( $name ); ?>
                                             </option>
 											<?php
 										}
@@ -82,8 +82,8 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                                     <div class="wllp-order-time-input">
                                         <select name="order_duration">
 											<?php foreach ( $purchase_time_list as $list ) { ?>
-                                                <option value="<?php echo $list['value']; ?>" <?php echo $order_duration == $list['value'] ? 'selected="selected"' : ''; ?>>
-													<?php esc_html_e( $list['label'] ); ?>
+                                                <option value="<?php echo esc_attr( $list['value'] ); ?>" <?php echo $order_duration == $list['value'] ? 'selected="selected"' : ''; ?>>
+													<?php echo esc_html( $list['label'] ); ?>
                                                 </option>
 											<?php } ?>
                                         </select>

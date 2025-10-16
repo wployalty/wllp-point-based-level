@@ -63,7 +63,7 @@ class Controller {
 		extract( $data );
 		include WLLP_PLUGIN_PATH . 'App/Views/Settings.php';
 		$html = ob_get_clean();
-		echo $html;
+		echo wp_kses_post( $html );
 	}
 
 	/**
@@ -89,6 +89,7 @@ class Controller {
 	 * @return void
 	 */
 	public static function loadAssets() {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended
 		if ( ! isset( $_GET['page'] ) || empty( $_GET['page'] || $_GET['page'] != WLLP_PLUGIN_SLUG ) ) {
 			return;
 		}
@@ -100,12 +101,13 @@ class Controller {
 
 		wp_enqueue_style( WLR_PLUGIN_SLUG . '-alertify',
 			WLR_PLUGIN_URL . 'Assets/Admin/Css/alertify' . $suffix . '.css', array(), WLR_PLUGIN_VERSION );
+		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.NotInFooter
 		wp_enqueue_script( WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Js/alertify' . $suffix . '.js',
 			array(), WLR_PLUGIN_VERSION . '&t=' . time() );
 
 		wp_enqueue_style( WLLP_PLUGIN_SLUG, WLLP_PLUGIN_URL . 'Assets/Admin/Css/wllp-admin.css', [],
 			WLLP_PLUGIN_VERSION );
-
+		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.NotInFooter
 		wp_enqueue_script( WLLP_PLUGIN_SLUG, WLLP_PLUGIN_URL . 'Assets/Admin/Js/wllp-admin.js', [], WLLP_PLUGIN_VERSION,
 			true );
 		$localize_data = apply_filters( 'wllp_localize_data', [
