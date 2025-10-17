@@ -16,13 +16,13 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
 ?>
 <div id="wllp-main">
     <div class="wllp-main-header">
-        <h1><?php echo esc_html__('WPLoyalty - Level Options', 'wllp-point-based-level'); ?> </h1>
+        <h1><?php echo esc_html__( 'WPLoyalty - Level Options', 'wllp-point-based-level' ); ?> </h1>
         <div><b><?php echo "v" . WLLP_PLUGIN_VERSION; ?></b></div>
     </div>
     <div class="wllp-grace-period-warning" style="<?php if ( $grace_period_enabled != 1 )
 		echo 'display: none;' ?>">
         <div class="wllp-notice-header">
-            <b><?php echo wp_kses_post( __( "Note: Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
+            <b><?php echo wp_kses_post( __( "Note: Grace Period is only available for 'Points Balance' and 'Redeemed Points' options. Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
 					'wllp-point-based-level' ) ) ?></b>
         </div>
     </div>
@@ -91,7 +91,8 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                                 </div>
                             </div>
                             <div class="wllp-field-block wllp-grace-period-section"
-                                 style="<?php if ( $levels_from_which_point_based != 'from_current_balance' )
+                                 style="<?php if ( ! in_array( $levels_from_which_point_based,
+								     [ 'from_current_balance', 'from_points_redeemed' ] ) )
 								     echo 'display: none;' ?>">
                                 <div>
                                     <label class="wllp-settings-enable-conversion-label">

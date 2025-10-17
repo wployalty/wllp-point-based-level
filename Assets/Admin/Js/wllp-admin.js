@@ -71,7 +71,7 @@ jQuery(function ($) {
                     orderSection.hide();
                 }
 
-                if (option === 'from_current_balance') {
+                if (option === 'from_current_balance' || option === 'from_points_redeemed') {
                     gracePeriodSection.show();
                 } else {
                     gracePeriodSection.hide();

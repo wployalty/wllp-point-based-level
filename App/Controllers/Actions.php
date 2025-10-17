@@ -12,6 +12,29 @@ use Wlr\App\Helpers\Settings;
 class Actions {
 
 	/**
+	 * Check if grace period is enabled
+	 *
+	 * @return bool
+	 */
+	private static function isGracePeriodEnabled(): bool {
+		return Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
+	}
+
+	/**
+	 * Check if grace period is both enabled and applicable for current point type
+	 *
+	 * @return bool
+	 */
+	private static function isGracePeriodApplicable(): bool {
+		if ( ! self::isGracePeriodEnabled() ) {
+			return false;
+		}
+		
+		$levels_from_which_point_based = Controller::getSetting( 'levels_from_which_point_based', '' );
+		return in_array( $levels_from_which_point_based, ['from_current_balance', 'from_points_redeemed'] );
+	}
+
+	/**
 	 * To change the points based on the settings.
 	 *
 	 * @param   int    $points
@@ -20,8 +43,7 @@ class Actions {
 	 * @return int
 	 */
 	public static function changePointsToGetLevel( int $points, array $user_fields ): int {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
-		if ( ! $grace_period_enabled ) {
+		if ( ! self::isGracePeriodApplicable() ) {
 			return self::resolvePointsBySetting( $points, $user_fields );
 		} else {
 			return GracePeriodController::filterPoints( $points, $user_fields );
@@ -214,8 +236,7 @@ class Actions {
 	 * @return void
 	 */
 	public static function afterLevelSave( $post_data, $level_id ) {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
-		if ( ! $grace_period_enabled ) {
+		if ( ! self::isGracePeriodEnabled() ) {
 			return;
 		}
 
@@ -267,8 +288,7 @@ class Actions {
 	 * @return void
 	 */
 	public static function afterLevelDelete( $level_id ) {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
-		if ( ! $grace_period_enabled ) {
+		if ( ! self::isGracePeriodEnabled() ) {
 			return;
 		}
 
@@ -286,8 +306,7 @@ class Actions {
 	 * @return void
 	 */
 	public static function afterLevelToggle( $level_id, $active ) {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
-		if ( ! $grace_period_enabled ) {
+		if ( ! self::isGracePeriodEnabled() ) {
 			return;
 		}
 
@@ -305,8 +324,7 @@ class Actions {
 	 * @return void
 	 */
 	public static function afterLevelBulkAction( $action_mode, $level_id ) {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
-		if ( ! $grace_period_enabled ) {
+		if ( ! self::isGracePeriodEnabled() ) {
 			return;
 		}
 
@@ -332,8 +350,7 @@ class Actions {
 	 */
 
 	public static function displayGracePeriodToUser() {
-		$grace_period_enabled = Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
-		if ( ! $grace_period_enabled ) {
+		if ( ! self::isGracePeriodApplicable() ) {
 			return;
 		}
 		$user = wp_get_current_user();
