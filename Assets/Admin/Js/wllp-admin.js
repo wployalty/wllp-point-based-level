@@ -11,11 +11,6 @@ jQuery(function ($) {
         },
 
         save_settings: function (section) {
-            // Validate grace period days before submission
-            if (!this.validateGracePeriodDays()) {
-                return;
-            }
-
             let data = $(section).serialize();
             $.ajax({
                 type: 'post',
@@ -33,14 +28,14 @@ jQuery(function ($) {
                     $("#wllp-settings #wllp-setting-submit-button span").html(saved_button_label);
                     $("#wllp-settings .wllp-button-block .spinner").removeClass("is-active");
                     if (json.error) {
+                        $('#wllp-settings #wllp-settings_form .wllp-error').remove();
                         if (json.message) {
                             alertify.error(json.message);
                         }
-
                         if (json.field_error) {
-                            wllp_jquery.each(json.field_error, function (index, value) {
+                            $.each(json.field_error, function (index, value) {
                                 //alertify.error(value);
-                                wllp_jquery(`#wllp-settings #wllp-settings_form .wllp_${index}_value_block`).after('<span class="wllp-error" style="color: red;">' + value + '</span>');
+                                $(`#wllp-settings #wllp-settings_form .wllp_${index}_value_block`).after('<span class="wllp-error" style="color: red;">' + value + '</span>');
                             });
                         }
                     } else {
@@ -55,38 +50,6 @@ jQuery(function ($) {
                     }
                 }
             });
-        },
-
-        validateGracePeriodDays: function () {
-            let checkbox = $('#wllp-settings .wllp-grace-period-checkbox');
-            let daysInput = $('#wllp-settings .wllp-grace-period-days-input');
-            alertify.set('notifier', 'position', 'top-right');
-            // Only validate if grace period is enabled
-            if (!checkbox.is(':checked')) {
-                return true;
-            }
-            
-            // Check if grace period section is visible (only for applicable point types)
-            let gracePeriodSection = $('#wllp-settings .wllp-grace-period-section');
-            if (gracePeriodSection.is(':hidden')) {
-                return true;
-            }
-            
-            let daysValue = daysInput.find('input[type="number"]').val();
-            
-            // Check if empty
-            if (!daysValue || daysValue.trim() === '') {
-                alertify.error('Grace period days cannot be empty');
-                return false;
-            }
-            
-            // Check if negative
-            if (parseInt(daysValue) < 0) {
-                alertify.error('Grace period days cannot be negative');
-                return false;
-            }
-            
-            return true;
         },
 
         event_listeners: function () {

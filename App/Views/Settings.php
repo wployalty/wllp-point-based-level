@@ -22,14 +22,16 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
     <div class="wllp-grace-period-warning" style="<?php if ( $grace_period_enabled != 1 )
 		echo 'display: none;' ?>">
         <div class="wllp-notice-header">
-            <b><?php echo wp_kses_post( __( "Note: Grace Period is only available for 'Points Balance' and 'Redeemed Points' options. Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
-					'wllp-point-based-level' ) ) ?></b>
+            <b><?php echo wp_kses_post( __(
+					"Note: Grace Period is only available for 'Points Balance' and 'Redeemed Points' options. Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
+					'wllp-point-based-level'
+				) ) ?></b>
         </div>
     </div>
     <div class="wllp-tabs">
         <a class="nav-tab-active"
-           href="<?php echo esc_url( admin_url( 'admin.php?' . http_build_query( [ 'page' => WLLP_PLUGIN_SLUG ] ) ) ) ?>"
-        ><i class="wlr wlrf-settings"></i><?php esc_html_e( 'Settings', 'wllp-point-based-level' ) ?></a>
+           href="<?php echo esc_url( admin_url( 'admin.php?' . http_build_query( [ 'page' => WLLP_PLUGIN_SLUG ] ) ) ) ?>"><i
+                    class="wlr wlrf-settings"></i><?php esc_html_e( 'Settings', 'wllp-point-based-level' ) ?></a>
     </div>
     <div>
         <div id="wllp-settings">
@@ -60,15 +62,17 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                             <div class="wllp-field-block">
                                 <div>
                                     <label
-                                            class="wllp-settings-enable-conversion-label"><?php esc_html_e( 'Levels should be based on',
-											'wllp-point-based-level' ); ?></label>
+                                            class="wllp-settings-enable-conversion-label"><?php esc_html_e(
+											'Levels should be based on',
+											'wllp-point-based-level'
+										); ?></label>
                                 </div>
                                 <div class="wllp-input-field">
                                     <select class="wllp-level-points-based" name="levels_from_which_point_based">
 										<?php
 										foreach ( $level_based_on_options as $key => $name ) {
 											?>
-                                            <option value="<?php echo esc_attr( $key ); ?>" <?php echo $levels_from_which_point_based == $key ? 'selected="selected"' : ''; ?> >
+                                            <option value="<?php echo esc_attr( $key ); ?>" <?php echo $levels_from_which_point_based == $key ? 'selected="selected"' : ''; ?>>
 												<?php echo esc_html( $name ); ?>
                                             </option>
 											<?php
@@ -91,21 +95,27 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                                 </div>
                             </div>
                             <div class="wllp-field-block wllp-grace-period-section"
-                                 style="<?php if ( ! in_array( $levels_from_which_point_based,
-								     [ 'from_current_balance', 'from_points_redeemed' ] ) )
+                                 style="<?php if ( ! in_array(
+								     $levels_from_which_point_based,
+								     [ 'from_current_balance', 'from_points_redeemed' ]
+							     ) )
 								     echo 'display: none;' ?>">
                                 <div class="wllp-grace-period-checkbox-container">
                                     <input type="checkbox" name="grace_period_enabled"
                                            value="1" <?php echo $grace_period_enabled == 1 ? 'checked="checked"' : ''; ?>
                                            class="wllp-grace-period-checkbox" id="wllp-grace-period-checkbox">
                                     <label for="wllp-grace-period-checkbox" class="wllp-grace-period-checkbox-label">
-										<?php esc_html_e( 'Enable grace period after level downgrade?',
-											'wllp-point-based-level' ); ?>
+										<?php esc_html_e(
+											'Enable grace period after level downgrade?',
+											'wllp-point-based-level'
+										); ?>
                                     </label>
                                 </div>
                                 <div class="wllp-grace-period-explanation">
-                                    <p><?php esc_html_e( 'How many days should a customer keep their current level before it\'s downgraded?',
-											'wllp-point-based-level' ); ?></p>
+                                    <p><?php esc_html_e(
+											'How many days should a customer keep their current level before it\'s downgraded?',
+											'wllp-point-based-level'
+										); ?></p>
                                 </div>
                                 <div class="wllp-grace-period-days-input" style="<?php if ( $grace_period_enabled != 1 )
 									echo 'display: none;' ?>">
@@ -113,6 +123,7 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                                         <input type="number" name="grace_period_days" id="grace_period_days"
                                                value="<?php echo esc_attr( $grace_period_days ); ?>" min="1" max="365"
                                                class="wllp-grace-period-days">
+                                        <div class="wllp_grace_period_days_value_block"></div>
                                         <div class="wllp-grace-period-days-label">
                                             <p><?php esc_html_e( 'in days', 'wllp-point-based-level' ); ?></p>
                                         </div>

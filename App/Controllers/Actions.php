@@ -29,9 +29,10 @@ class Actions {
 		if ( ! self::isGracePeriodEnabled() ) {
 			return false;
 		}
-		
+
 		$levels_from_which_point_based = Controller::getSetting( 'levels_from_which_point_based', '' );
-		return in_array( $levels_from_which_point_based, ['from_current_balance', 'from_points_redeemed'] );
+
+		return in_array( $levels_from_which_point_based, [ 'from_current_balance', 'from_points_redeemed' ] );
 	}
 
 	/**

@@ -221,7 +221,15 @@ class Controller {
 
 			return $data;
 		}
-
+		if ( empty( $data['grace_period_days'] ) || ! is_numeric( $data['grace_period_days'] ) || (int) $data['grace_period_days'] <= 0 ) {
+			$response                = [];
+			$response['error']       = true;
+			$response['field_error'] = [
+				'grace_period_days' => esc_html__( 'Please enter a valid number of days', 'wllp-point-based-level' )
+			];
+			$response['message']     = esc_html__( 'Settings not saved!', 'wllp-point-based-level' );
+			wp_send_json( $response );
+		}
 		$level_model      = new Levels();
 		$available_levels = $level_model->getAll();
 
