@@ -214,8 +214,11 @@ class Controller {
 	}
 
 	public static function addLevelsMetaData( $data ) {
+		$grace_period_applicable = isset( $data['levels_from_which_point_based'] ) &&
+		                           in_array( $data['levels_from_which_point_based'],
+			                           [ 'from_current_balance', 'from_points_redeemed' ] );
 
-		if ( empty( $data['grace_period_enabled'] ) || $data['grace_period_enabled'] != '1' ) {
+		if ( ! $grace_period_applicable ) {
 			$data['grace_period_enabled'] = '0';
 			unset( $data['grace_period_days'] );
 
