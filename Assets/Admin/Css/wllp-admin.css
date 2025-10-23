@@ -162,4 +162,71 @@
     padding: 1rem;
     margin: 1rem 0;
     font-size: 14px;
+    text-align: left;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-checkbox {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #1a73e8;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-checkbox-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #161f31;
+    cursor: pointer;
+    margin: 0;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-explanation {
+    margin-left: 26px;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-explanation p {
+    font-size: 14px;
+    font-weight: 400;
+    color: #535863;
+    margin: 0;
+    line-height: 1.4;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-input-container {
+    margin-left: 26px;
+    display: flex;
+    flex-direction: column;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-days {
+    width: 80px;
+    height: 36px;
+    padding: 8px 12px;
+    border: 1px solid #e7e7ef;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 14px;
+    font-weight: 400;
+    box-shadow: none;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-days:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
 }

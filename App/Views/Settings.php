@@ -94,22 +94,28 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                                  style="<?php if ( ! in_array( $levels_from_which_point_based,
 								     [ 'from_current_balance', 'from_points_redeemed' ] ) )
 								     echo 'display: none;' ?>">
-                                <div>
-                                    <label class="wllp-settings-enable-conversion-label">
-                                        <input type="checkbox" name="grace_period_enabled"
-                                               value="1" <?php echo $grace_period_enabled == 1 ? 'checked="checked"' : ''; ?>
-                                               class="wllp-grace-period-checkbox">
-										<?php esc_html_e( 'Enable Grace Period', 'wllp-point-based-level' ); ?>
+                                <div class="wllp-grace-period-checkbox-container">
+                                    <input type="checkbox" name="grace_period_enabled"
+                                           value="1" <?php echo $grace_period_enabled == 1 ? 'checked="checked"' : ''; ?>
+                                           class="wllp-grace-period-checkbox" id="wllp-grace-period-checkbox">
+                                    <label for="wllp-grace-period-checkbox" class="wllp-grace-period-checkbox-label">
+										<?php esc_html_e( 'Enable grace period after level downgrade?',
+											'wllp-point-based-level' ); ?>
                                     </label>
+                                </div>
+                                <div class="wllp-grace-period-explanation">
+                                    <p><?php esc_html_e( 'How many days should a customer keep their current level before it\'s downgraded?',
+											'wllp-point-based-level' ); ?></p>
                                 </div>
                                 <div class="wllp-grace-period-days-input" style="<?php if ( $grace_period_enabled != 1 )
 									echo 'display: none;' ?>">
-                                    <div class="wllp-input-field">
-                                        <label for="grace_period_days"><?php esc_html_e( 'Grace Period Days',
-												'wllp-point-based-level' ); ?></label>
+                                    <div class="wllp-grace-period-input-container">
                                         <input type="number" name="grace_period_days" id="grace_period_days"
                                                value="<?php echo esc_attr( $grace_period_days ); ?>" min="1" max="365"
                                                class="wllp-grace-period-days">
+                                        <div class="wllp-grace-period-days-label">
+                                            <p><?php esc_html_e( 'in days', 'wllp-point-based-level' ); ?></p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
