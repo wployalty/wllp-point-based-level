@@ -8,6 +8,7 @@ use Wlr\App\Controllers\Admin\Labels;
 use Wlr\App\Helpers\Base;
 use Wlr\App\Helpers\Input;
 use Wlr\App\Models\Levels;
+use WLLP\App\Helpers\WC;
 
 defined( 'ABSPATH' ) or die;
 
@@ -54,17 +55,16 @@ class Controller {
 	public static function displayMenuContent() {
 		$data = [
 			'options'              => get_option( 'wllp_settings_data', [] ),
-			'app_url'              => admin_url( 'admin.php?' . http_build_query( array( 'page' => WLR_PLUGIN_SLUG ) ) ) . '#/apps',
+			'app_url'              => admin_url( 'admin.php?' . http_build_query( [ 'page' => WLR_PLUGIN_SLUG ] ) ) . '#/apps',
 			'grace_period_enabled' => self::getSetting( 'grace_period_enabled', 0 ),
 			'grace_period_days'    => self::getSetting( 'grace_period_days', 30 ),
 		];
 
-		ob_start();
-		extract( $data );
-		include WLLP_PLUGIN_PATH . 'App/Views/Settings.php';
-		$html = ob_get_clean();
-
-		echo $html;
+		$file_path = get_theme_file_path( 'wllp-point-based-level/Admin/Settings.php' );
+		if ( ! file_exists( $file_path ) ) {
+			$file_path = WLLP_VIEW_PATH . '/Admin/Settings.php';
+		}
+		WC::renderTemplate( $file_path, $data );
 	}
 
 	/**
@@ -101,10 +101,10 @@ class Controller {
 		}
 
 		wp_enqueue_style( WLR_PLUGIN_SLUG . '-alertify',
-			WLR_PLUGIN_URL . 'Assets/Admin/Css/alertify' . $suffix . '.css', array(), WLR_PLUGIN_VERSION );
+			WLR_PLUGIN_URL . 'Assets/Admin/Css/alertify' . $suffix . '.css', [], WLR_PLUGIN_VERSION );
 		// phpcs:ignore WordPress.WP.EnqueuedResourceParameters.NotInFooter
 		wp_enqueue_script( WLR_PLUGIN_SLUG . '-alertify', WLR_PLUGIN_URL . 'Assets/Admin/Js/alertify' . $suffix . '.js',
-			array(), WLR_PLUGIN_VERSION . '&t=' . time() );
+			[], WLR_PLUGIN_VERSION . '&t=' . time() );
 
 		wp_enqueue_style( WLLP_PLUGIN_SLUG, WLLP_PLUGIN_URL . 'Assets/Admin/Css/wllp-admin.css', [],
 			WLLP_PLUGIN_VERSION );

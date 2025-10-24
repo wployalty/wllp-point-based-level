@@ -52,6 +52,7 @@ defined( 'WLLP_PLUGIN_VERSION' ) or define( 'WLLP_PLUGIN_VERSION', '1.0.1' );
 defined( 'WLLP_PLUGIN_SLUG' ) or define( 'WLLP_PLUGIN_SLUG', 'wllp-point-based-level' );
 defined( 'WLLP_PLUGIN_FILE' ) or define( 'WLLP_PLUGIN_FILE', __FILE__ );
 defined( 'WLLP_PLUGIN_PATH' ) or define( 'WLLP_PLUGIN_PATH', str_replace( '\\', '/', __DIR__ ) . '/' );
+defined( 'WLLP_VIEW_PATH' ) or define( 'WLLP_VIEW_PATH', str_replace( "\\", '/', __DIR__ ) . '/App/Views' );
 defined( 'WLLP_PLUGIN_URL' ) or define( 'WLLP_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 
 // to load composer autoload.
