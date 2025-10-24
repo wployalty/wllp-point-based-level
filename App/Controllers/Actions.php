@@ -394,6 +394,9 @@ class Actions {
 
 		if ( $remaining_days == 0 ) {
 			$remaining_hours = floor( $remaining_seconds / HOUR_IN_SECONDS );
+			if ( $remaining_hours == 0 ) {
+				$remaining_minutes = floor( $remaining_seconds / MINUTE_IN_SECONDS );
+			}
 		}
 
 		$levels_model  = new \Wlr\App\Models\Levels();
@@ -407,14 +410,18 @@ class Actions {
 
 		$current_level_name = is_object( $current_level ) && isset( $current_level->name ) ? $current_level->name : '';
 
-		if ( ! empty( $remaining_hours ) && $remaining_days == 0 ) {
+		if ( $remaining_days > 0 ) {
+			/* translators: %d: remaining days */
+			$time_display = sprintf( _n( '%d day', '%d days', $remaining_days, 'wllp-point-based-level' ),
+				$remaining_days );
+		} elseif ( $remaining_hours > 0 ) {
 			/* translators: %d: remaining hours */
 			$time_display = sprintf( _n( '%d hour', '%d hours', $remaining_hours, 'wllp-point-based-level' ),
 				$remaining_hours );
 		} else {
-			/* translators: %d: remaining days */
-			$time_display = sprintf( _n( '%d day', '%d days', $remaining_days, 'wllp-point-based-level' ),
-				$remaining_days );
+			/* translators: %d: remaining minutes */
+			$time_display = sprintf( _n( '%d minute', '%d minutes', $remaining_minutes, 'wllp-point-based-level' ),
+				$remaining_minutes );
 		}
 
 		$template_data = [
