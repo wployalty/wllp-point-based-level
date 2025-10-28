@@ -10,9 +10,9 @@
  * Text Domain: wllp-point-based-level
  * Domain Path: /i18n/languages/
  * Requires Plugins: woocommerce
- * Requires at least: 4.9.0
+ * Requires at least: 6.0
  * WC requires at least: 6.5
- * WC tested up to: 9.8
+ * WC tested up to: 10.3.3
  * Contributors: Wployalty
  * Author URI: https://wployalty.net/
  * License: GPLv2 or later
@@ -45,8 +45,8 @@ add_action( 'before_woocommerce_init', function () {
 
 defined( 'WLLP_PLUGIN_NAME' ) or define( 'WLLP_PLUGIN_NAME', 'WPLoyalty - Level Options' );
 defined( 'WLLP_MINIMUM_PHP_VERSION' ) or define( 'WLLP_MINIMUM_PHP_VERSION', '7.4.0' );
-defined( 'WLLP_MINIMUM_WP_VERSION' ) or define( 'WLLP_MINIMUM_WP_VERSION', '4.9' );
-defined( 'WLLP_MINIMUM_WC_VERSION' ) or define( 'WLLP_MINIMUM_WC_VERSION', '6.0' );
+defined( 'WLLP_MINIMUM_WP_VERSION' ) or define( 'WLLP_MINIMUM_WP_VERSION', '6.0' );
+defined( 'WLLP_MINIMUM_WC_VERSION' ) or define( 'WLLP_MINIMUM_WC_VERSION', '6.5' );
 defined( 'WLLP_MINIMUM_WLR_VERSION' ) or define( 'WLLP_MINIMUM_WLR_VERSION', '1.3.2' );
 defined( 'WLLP_PLUGIN_VERSION' ) or define( 'WLLP_PLUGIN_VERSION', '1.0.1' );
 defined( 'WLLP_PLUGIN_SLUG' ) or define( 'WLLP_PLUGIN_SLUG', 'wllp-point-based-level' );
