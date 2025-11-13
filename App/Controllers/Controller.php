@@ -221,7 +221,7 @@ class Controller {
 	public static function addLevelsMetaData( $data ) {
 		$grace_period_applicable = isset( $data['levels_from_which_point_based'] ) &&
 		                           in_array( $data['levels_from_which_point_based'],
-			                           [ 'from_current_balance', 'from_points_redeemed' , 'from_total_earned_points'] );
+			                           [ 'from_current_balance', 'from_points_redeemed', 'from_total_earned_points' ] );
 
 		if ( ! $grace_period_applicable ) {
 			$data['grace_period_enabled'] = '0';
@@ -229,13 +229,21 @@ class Controller {
 
 			return $data;
 		}
-		if ( empty( $data['grace_period_days'] ) || ! is_numeric( $data['grace_period_days'] ) || (int) $data['grace_period_days'] <= 0 ) {
+		if ( empty( $data['grace_period_days'] ) || ! is_numeric( $data['grace_period_days'] ) || (int) $data['grace_period_days'] <= 0 ||
+		     (int) $data['grace_period_days'] > apply_filters( 'wllp_max_grace_period_days', 365 ) ) {
 			$response                = [];
 			$response['error']       = true;
 			$response['field_error'] = [
 				'grace_period_days' => esc_html__( 'Please enter a valid number of days', 'wllp-point-based-level' )
 			];
-			$response['message']     = esc_html__( 'Settings not saved!', 'wllp-point-based-level' );
+			if ( (int) $data['grace_period_days'] > apply_filters( 'wllp_max_grace_period_days', 365 ) ) {
+				$response['field_error'] = [
+					'grace_period_days' => esc_html__( 'Grace period cannot be greater than ' . apply_filters( 'wllp_max_grace_period_days',
+							365 ) . ' days.',
+						'wllp-point-based-level' )
+				];
+			}
+			$response['message'] = esc_html__( 'Settings not saved!', 'wllp-point-based-level' );
 			wp_send_json( $response );
 		}
 		$level_model      = new Levels();

@@ -97,7 +97,7 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                             <div class="wllp-field-block wllp-grace-period-section"
                                  style="<?php if ( ! in_array(
 								     $levels_from_which_point_based,
-								     [ 'from_current_balance', 'from_points_redeemed' , 'from_total_earned_points']
+								     [ 'from_current_balance', 'from_points_redeemed', 'from_total_earned_points' ]
 							     ) )
 								     echo 'display: none;' ?>">
                                 <div class="wllp-grace-period-checkbox-container">
@@ -121,11 +121,13 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
 									echo 'display: none;' ?>">
                                     <div class="wllp-grace-period-input-container">
                                         <input type="number" name="grace_period_days" id="grace_period_days"
-                                               value="<?php echo esc_attr( $grace_period_days ); ?>" min="1" max="365"
+                                               value="<?php echo esc_attr( $grace_period_days ); ?>" min="1"
+                                               max="<?php echo esc_attr( apply_filters( 'wllp_max_grace_period_days',
+											       365 ) ); ?>"
                                                class="wllp-grace-period-days">
                                         <div class="wllp_grace_period_days_value_block"></div>
                                         <div class="wllp-grace-period-days-label">
-                                            <p><?php esc_html_e( 'in days', 'wllp-point-based-level' ); ?></p>
+                                            <p><?php esc_html_e( 'days', 'wllp-point-based-level' ); ?></p>
                                         </div>
                                     </div>
                                 </div>

@@ -209,7 +209,9 @@
 #wllp-main #wllp-settings .wllp-grace-period-input-container {
     margin-left: 26px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
 }
 
 #wllp-main #wllp-settings .wllp-grace-period-days {
