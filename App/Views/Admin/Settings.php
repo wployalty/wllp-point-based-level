@@ -23,7 +23,7 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
 		echo 'display: none;' ?>">
         <div class="wllp-notice-header">
             <b><?php echo wp_kses_post( __(
-					"Note: Grace Period is only available for 'Points Balance' and 'Redeemed Points' options. Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
+					"Note: Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
 					'wllp-point-based-level'
 				) ) ?></b>
         </div>
@@ -97,7 +97,7 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                             <div class="wllp-field-block wllp-grace-period-section"
                                  style="<?php if ( ! in_array(
 								     $levels_from_which_point_based,
-								     [ 'from_current_balance', 'from_points_redeemed' ]
+								     [ 'from_current_balance', 'from_points_redeemed' , 'from_total_earned_points']
 							     ) )
 								     echo 'display: none;' ?>">
                                 <div class="wllp-grace-period-checkbox-container">

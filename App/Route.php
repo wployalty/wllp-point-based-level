@@ -18,9 +18,8 @@ class Route {
 		if ( is_admin() ) { // to load admin hooks.
 			self::loadAdminHooks();
 		}
-
-		if ( Controller::getSetting( 'levels_from_which_point_based',
-				'from_total_earned_points' ) != 'from_total_earned_points' ) {
+		$level_based_on = Controller::getSetting( 'levels_from_which_point_based', 'from_total_earned_points' );
+		if ( Actions::isGracePeriodEnabled() || $level_based_on != 'from_total_earned_points' ) {
 			self::loadCommonHooks();
 		}
 	}

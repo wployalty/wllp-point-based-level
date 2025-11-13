@@ -11,12 +11,18 @@ use Wlr\App\Helpers\Settings;
 
 class Actions {
 
+	private const SOURCE_MAP = [
+		'from_current_balance'     => 'points',
+		'from_points_redeemed'     => 'used_total_points',
+		'from_total_earned_points' => 'earn_total_point',
+	];
+
 	/**
 	 * Check if grace period is enabled
 	 *
 	 * @return bool
 	 */
-	private static function isGracePeriodEnabled(): bool {
+	public static function isGracePeriodEnabled(): bool {
 		return Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
 	}
 
@@ -32,7 +38,8 @@ class Actions {
 
 		$levels_from_which_point_based = Controller::getSetting( 'levels_from_which_point_based', '' );
 
-		return in_array( $levels_from_which_point_based, [ 'from_current_balance', 'from_points_redeemed' ] );
+		return in_array( $levels_from_which_point_based,
+			[ 'from_current_balance', 'from_points_redeemed', 'from_total_earned_points' ] );
 	}
 
 	/**
@@ -62,13 +69,19 @@ class Actions {
 	 */
 	public static function resolvePointsBySetting( int $points, $fields ): int {
 		$setting = Controller::getSetting( 'levels_from_which_point_based', '' );
+		$setting = apply_filters( 'wllp_levels_point_source', $setting, $fields, $points );
 
-		if ( $setting == 'from_current_balance' && self::hasField( $fields, 'points' ) ) {
-			return (int) self::getFieldValue( $fields, 'points', $points );
-		} elseif ( $setting == 'from_points_redeemed' && self::hasField( $fields, 'used_total_points' ) ) {
-			return (int) self::getFieldValue( $fields, 'used_total_points', $points );
-		} elseif ( $setting == 'from_order_total' ) {
+		if ( $setting === 'from_order_total' ) {
 			return (int) self::getOrderTotal( $fields );
+		}
+
+		$map = self::SOURCE_MAP;
+
+		if ( isset( $map[ $setting ] ) && self::hasField( $fields, $map[ $setting ] ) ) {
+			$resolved_point = self::getFieldValue( $fields, $map[ $setting ], $points );
+
+			return apply_filters( 'wllp_resolved_points_by_setting', (int) $resolved_point, $setting, $fields,
+				$points );
 		}
 
 		return (int) $points;

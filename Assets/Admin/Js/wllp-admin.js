@@ -3,7 +3,7 @@ jQuery(function ($) {
     let wllp_nonce = wllp_localize_data.nonce;
     let saving_button_label = wllp_localize_data.saving_button_label ?? '';
     let saved_button_label = wllp_localize_data.saved_button_label ?? '';
-
+    let wllp_options_from_which_grace_based_on = wllp_localize_data.grace_based_on_options ?? [];
 
     const wllp_functions = {
         init: function () {
@@ -68,8 +68,7 @@ jQuery(function ($) {
                 } else {
                     orderSection.hide();
                 }
-
-                if (option === 'from_current_balance' || option === 'from_points_redeemed') {
+                if (wllp_options_from_which_grace_based_on.includes(option)) {
                     gracePeriodSection.show();
                 } else {
                     gracePeriodSection.hide();

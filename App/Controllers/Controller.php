@@ -112,12 +112,17 @@ class Controller {
 		wp_enqueue_script( WLLP_PLUGIN_SLUG, WLLP_PLUGIN_URL . 'Assets/Admin/Js/wllp-admin.js', [], WLLP_PLUGIN_VERSION,
 			true );
 		$localize_data = apply_filters( 'wllp_localize_data', [
-			'home_url'            => get_home_url(),
-			'admin_url'           => admin_url(),
-			'ajax_url'            => admin_url( 'admin-ajax.php' ),
-			'nonce'               => wp_create_nonce( WLLP_PLUGIN_SLUG ),
-			'saving_button_label' => __( 'Saving...', 'wllp-point-based-level' ),
-			'saved_button_label'  => __( 'Save Changes', 'wllp-point-based-level' ),
+			'home_url'               => get_home_url(),
+			'admin_url'              => admin_url(),
+			'ajax_url'               => admin_url( 'admin-ajax.php' ),
+			'nonce'                  => wp_create_nonce( WLLP_PLUGIN_SLUG ),
+			'saving_button_label'    => __( 'Saving...', 'wllp-point-based-level' ),
+			'saved_button_label'     => __( 'Save Changes', 'wllp-point-based-level' ),
+			'grace_based_on_options' => [
+				'from_current_balance',
+				'from_points_redeemed',
+				'from_total_earned_points',
+			]
 		] );
 		wp_localize_script( WLLP_PLUGIN_SLUG, 'wllp_localize_data', $localize_data );
 	}
@@ -216,7 +221,7 @@ class Controller {
 	public static function addLevelsMetaData( $data ) {
 		$grace_period_applicable = isset( $data['levels_from_which_point_based'] ) &&
 		                           in_array( $data['levels_from_which_point_based'],
-			                           [ 'from_current_balance', 'from_points_redeemed' ] );
+			                           [ 'from_current_balance', 'from_points_redeemed' , 'from_total_earned_points'] );
 
 		if ( ! $grace_period_applicable ) {
 			$data['grace_period_enabled'] = '0';
