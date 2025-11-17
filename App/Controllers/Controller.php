@@ -238,9 +238,11 @@ class Controller {
 			];
 			if ( (int) $data['grace_period_days'] > apply_filters( 'wllp_max_grace_period_days', 365 ) ) {
 				$response['field_error'] = [
-					'grace_period_days' => esc_html__( 'Grace period cannot be greater than ' . apply_filters( 'wllp_max_grace_period_days',
-							365 ) . ' days.',
-						'wllp-point-based-level' )
+					'grace_period_days' => [
+						// translators: %1$d is maximum number of days allowed for grace period.
+						sprintf( __( 'Grace period cannot be greater than %1$d days.', 'wllp-point-based-level' ),
+							apply_filters( 'wllp_max_grace_period_days', 365 ) )
+					]
 				];
 			}
 			$response['message'] = esc_html__( 'Settings not saved!', 'wllp-point-based-level' );
