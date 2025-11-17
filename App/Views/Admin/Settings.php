@@ -8,10 +8,10 @@ if ( ! isset( $options ) ) {
 $level_based_on_options = \WLLP\App\Controllers\Controller::levelBasedOnOptions() ?? [];
 $purchase_time_list     = \WLLP\App\Controllers\Controller::purchaseTimeList() ?? [];
 
-$levels_from_which_point_based = $options['levels_from_which_point_based'] ?? 'from_total_earned_points';
+$levels_from_which_point_based = $options['levels_from_which_point_based'] ?? \WLLP\App\Helpers\Util::getDefaults( 'levels_from_which_point_based' );
 $order_duration                = $options['order_duration'] ?? '';
-$grace_period_enabled          = $options['grace_period_enabled'] ?? 0;
-$grace_period_days             = $options['grace_period_days'] ?? 30;
+$grace_period_enabled          = $options['grace_period_enabled'] ?? \WLLP\App\Helpers\Util::getDefaults( 'grace_period_enabled' );
+$grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Helpers\Util::getDefaults( 'grace_period_days' );
 
 ?>
 <div id="wllp-main">

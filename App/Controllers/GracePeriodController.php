@@ -4,6 +4,7 @@ namespace WLLP\App\Controllers;
 
 defined( 'ABSPATH' ) or die;
 
+use WLLP\App\Helpers\Util;
 use WLLP\App\Models\GracePeriod;
 use Wlr\App\Helpers\Base;
 use Wlr\App\Models\Levels;
@@ -135,7 +136,8 @@ class GracePeriodController {
 		$locked_rank = isset( $rank_by_id[ $grace_record->upgraded_level_id ] ) ? $rank_by_id[ $grace_record->upgraded_level_id ] : - 1;
 		//if degrading below locked, activate and maintain locked
 		if ( self::shouldActivateGracePeriod( $current_level_rank, $locked_rank ) ) {
-			$grace_period_days = (int) Controller::getSetting( 'grace_period_days', 30 );
+			$grace_period_days = (int) Controller::getSetting( 'grace_period_days',
+				Util::getDefaults( 'grace_period_days' ) );
 			if ( $grace_period_days > 0 ) {
 				$valid_until = strtotime( gmdate( "Y-m-d H:i:s" ) ) + ( $grace_period_days * DAY_IN_SECONDS );
 				self::updateGracePeriodRecord( $grace_record->id, [ 'level_valid_until' => (int) $valid_until ] );

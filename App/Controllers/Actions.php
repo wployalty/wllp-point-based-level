@@ -2,6 +2,7 @@
 
 namespace WLLP\App\Controllers;
 
+use WLLP\App\Helpers\Util;
 use Wlr\App\Models\Users;
 
 defined( 'ABSPATH' ) or die;
@@ -23,7 +24,7 @@ class Actions {
 	 * @return bool
 	 */
 	public static function isGracePeriodEnabled(): bool {
-		return Controller::getSetting( 'grace_period_enabled', 0 ) == 1;
+		return Controller::getSetting( 'grace_period_enabled', Util::getDefaults( 'grace_period_enabled' ) ) == 1;
 	}
 
 	/**
@@ -36,7 +37,8 @@ class Actions {
 			return false;
 		}
 
-		$levels_from_which_point_based = Controller::getSetting( 'levels_from_which_point_based', '' );
+		$levels_from_which_point_based = Controller::getSetting( 'levels_from_which_point_based',
+			Util::getDefaults( 'levels_from_which_point_based' ) );
 
 		return in_array( $levels_from_which_point_based,
 			[ 'from_current_balance', 'from_points_redeemed', 'from_total_earned_points' ] );
@@ -68,7 +70,8 @@ class Actions {
 	 * @return int
 	 */
 	public static function resolvePointsBySetting( int $points, $fields ): int {
-		$setting = Controller::getSetting( 'levels_from_which_point_based', '' );
+		$setting = Controller::getSetting( 'levels_from_which_point_based',
+			Util::getDefaults( 'levels_from_which_point_based' ) );
 		$setting = apply_filters( 'wllp_levels_point_source', $setting, $fields, $points );
 
 		if ( $setting === 'from_order_total' ) {
@@ -269,7 +272,7 @@ class Actions {
 			}
 
 
-			$stored_metadata = Controller::getSetting( 'level_metadata', [] );
+			$stored_metadata = Controller::getSetting( 'level_metadata', Util::getDefaults( 'level_metadata' ) );
 			$stored_level    = Controller::findLevelById( $stored_metadata, $level_id );
 
 			if ( ! $stored_level ) {
@@ -352,7 +355,7 @@ class Actions {
 	 * @return void
 	 */
 	private static function updateLevelMetadata() {
-		$current_settings = get_option( 'wllp_settings_data', [] );
+		$current_settings = get_option( 'wllp_settings_data', Util::getDefaults( 'wllp_settings_data' ) );
 		$updated_settings = Controller::addLevelsMetaData( $current_settings );
 		update_option( 'wllp_settings_data', $updated_settings );
 	}
