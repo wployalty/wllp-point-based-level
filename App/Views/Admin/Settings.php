@@ -125,11 +125,11 @@ $grace_period_days             = $options['grace_period_days'] ?? 30;
                                                max="<?php echo esc_attr( apply_filters( 'wllp_max_grace_period_days',
 											       365 ) ); ?>"
                                                class="wllp-grace-period-days">
-                                        <div class="wllp_grace_period_days_value_block"></div>
                                         <div class="wllp-grace-period-days-label">
                                             <p><?php esc_html_e( 'days', 'wllp-point-based-level' ); ?></p>
                                         </div>
                                     </div>
+                                    <div class="wllp_grace_period_days_value_block"></div>
                                 </div>
                             </div>
                         </div>

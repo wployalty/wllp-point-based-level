@@ -35,7 +35,7 @@ jQuery(function ($) {
                         if (json.field_error) {
                             $.each(json.field_error, function (index, value) {
                                 //alertify.error(value);
-                                $(`#wllp-settings #wllp-settings_form .wllp_${index}_value_block`).after('<span class="wllp-error" style="color: red;">' + value + '</span>');
+                                $(`#wllp-settings #wllp-settings_form .wllp_${index}_value_block`).after('<span class="wllp-error" style="color: red;margin-left: 26px;">' + value + '</span>');
                             });
                         }
                     } else {
