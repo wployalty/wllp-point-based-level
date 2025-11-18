@@ -34,8 +34,8 @@ $level_check = isset( $level_data ) && is_object( $level_data ) && isset( $level
                     <p class="wlr-text-color">
 						<?php
 						printf(
-                            /* translators: 1: current level name, 2: remaining time in grace period */
-                            esc_html__( 'You are currently enjoying %1$s benefits for %2$s more.',
+						/* translators: 1: current level name, 2: remaining time in grace period */
+							esc_html__( 'You are currently enjoying %1$s benefits and it expires on %2$s.',
 								'wllp-point-based-level' ),
 							'<strong>' . esc_html( $current_level_name ) . '</strong>',
 							'<strong>' . esc_html( $time_display ) . '</strong>'
@@ -45,8 +45,8 @@ $level_check = isset( $level_data ) && is_object( $level_data ) && isset( $level
                     <p class="wlr-text-color">
 						<?php
 						printf(
-                            /* translators: 1: minimum points, 2: maximum points */
-                            esc_html__( 'To maintain this level, you need to maintain your points between %1$d to %2$d by the end of the grace period.',
+						/* translators: 1: minimum points, 2: maximum points */
+							esc_html__( 'To maintain this level, you need to maintain your points between %1$d to %2$d by the end of the grace period.',
 								'wllp-point-based-level' ),
 							(int) $minimum_points,
 							(int) $maximum_points

@@ -405,16 +405,6 @@ class Actions {
 			return;
 		}
 
-		$remaining_seconds = $valid_until - $now;
-		$remaining_days    = floor( $remaining_seconds / DAY_IN_SECONDS );
-
-		if ( $remaining_days == 0 ) {
-			$remaining_hours = floor( $remaining_seconds / HOUR_IN_SECONDS );
-			if ( $remaining_hours == 0 ) {
-				$remaining_minutes = floor( $remaining_seconds / MINUTE_IN_SECONDS );
-			}
-		}
-
 		$levels_model  = new \Wlr\App\Models\Levels();
 		$where         = [
 			'id' => [
@@ -425,24 +415,12 @@ class Actions {
 		$current_level = $levels_model->getQueryData( $where, '*', [], true );
 
 		$current_level_name = is_object( $current_level ) && isset( $current_level->name ) ? $current_level->name : '';
-
-		if ( $remaining_days > 0 ) {
-			/* translators: %d: remaining days */
-			$time_display = sprintf( _n( '%d day', '%d days', $remaining_days, 'wllp-point-based-level' ),
-				$remaining_days );
-		} elseif ( $remaining_hours > 0 ) {
-			/* translators: %d: remaining hours */
-			$time_display = sprintf( _n( '%d hour', '%d hours', $remaining_hours, 'wllp-point-based-level' ),
-				$remaining_hours );
-		} else {
-			/* translators: %d: remaining minutes */
-			$time_display = sprintf( _n( '%d minute', '%d minutes', $remaining_minutes, 'wllp-point-based-level' ),
-				$remaining_minutes );
-		}
+		$date_format        = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+		$expiry_date_time   = Util::beforeDisplayDate( $valid_until, $date_format );
 
 		$template_data = [
 			'current_level_name' => $current_level_name,
-			'time_display'       => $time_display,
+			'time_display'       => $expiry_date_time,
 			'minimum_points'     => (int) $current_level->from_points,
 			'maximum_points'     => (int) $current_level->to_points,
 			'level_id'           => (int) $existing_record->upgraded_level_id,
