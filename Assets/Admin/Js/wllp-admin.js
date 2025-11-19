@@ -88,6 +88,12 @@ jQuery(function ($) {
                     warningSection.hide();
                 }
             });
+
+            $('#grace_period_days').on('keypress', function (e) {
+                if (isNaN(e.key)) {
+                    e.preventDefault();
+                }
+            });
         },
     }
 

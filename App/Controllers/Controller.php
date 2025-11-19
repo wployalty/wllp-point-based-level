@@ -230,7 +230,7 @@ class Controller {
 
 			return $data;
 		}
-		if ( empty( $data['grace_period_days'] ) || ! is_numeric( $data['grace_period_days'] ) || (int) $data['grace_period_days'] <= 0 ||
+		if ( empty( $data['grace_period_days'] ) || ( (int) $data['grace_period_days'] != $data['grace_period_days'] ) || (int) $data['grace_period_days'] <= 0 ||
 		     (int) $data['grace_period_days'] > apply_filters( 'wllp_max_grace_period_days', 365 ) ) {
 			$response                = [];
 			$response['error']       = true;
