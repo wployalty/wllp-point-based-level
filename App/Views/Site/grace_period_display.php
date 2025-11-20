@@ -9,7 +9,8 @@
 defined( 'ABSPATH' ) or die;
 
 $current_level_name = $current_level_name ?? '';
-$time_display       = $time_display ?? __( '0 days', 'wllp-point-based-level' );
+$expiry_date        = $expiry_date ?? '';
+$expiry_time        = $expiry_time ?? '';
 $minimum_points     = $minimum_points ?? 0;
 $maximum_points     = $maximum_points ?? 0;
 $level_id           = $level_id ?? 0;
@@ -35,10 +36,11 @@ $level_check = isset( $level_data ) && is_object( $level_data ) && isset( $level
 						<?php
 						printf(
 						/* translators: 1: current level name, 2: remaining time in grace period */
-							esc_html__( 'You are currently enjoying %1$s level benefits, and it expires on %2$s.',
+							esc_html__( 'You are currently enjoying %1$s level benefits, and it expires on %2$s, at %3$s.',
 								'wllp-point-based-level' ),
 							'<strong>' . esc_html( $current_level_name ) . '</strong>',
-							'<strong>' . esc_html( $time_display ) . '</strong>'
+							'<strong>' . esc_html( $expiry_date ) . '</strong>',
+							'<strong>' . esc_html( $expiry_time ) . '</strong>'
 						);
 						?>
                     </p>
@@ -46,7 +48,7 @@ $level_check = isset( $level_data ) && is_object( $level_data ) && isset( $level
 						<?php
 						printf(
 						/* translators: 1: minimum points, 2: maximum points */
-							esc_html__( 'To maintain this level, you need to maintain your points between %1$d to %2$d by the end of the grace period.',
+							esc_html__( 'To maintain this level, you need to maintain your points between %1$d and %2$d by the end of the grace period.',
 								'wllp-point-based-level' ),
 							(int) $minimum_points,
 							(int) $maximum_points

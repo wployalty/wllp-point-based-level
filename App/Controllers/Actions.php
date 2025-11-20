@@ -423,12 +423,13 @@ class Actions {
 		}
 
 		$current_level_name = is_object( $current_level ) && isset( $current_level->name ) ? $current_level->name : '';
-		$date_format        = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
-		$expiry_date_time   = Util::beforeDisplayDate( $valid_until, $date_format );
+		$expiry_date        = Util::beforeDisplayDate( $valid_until, get_option( 'date_format' ) );
+		$expiry_time        = Util::beforeDisplayDate( $valid_until, get_option( 'time_format' ) );
 
 		$template_data = [
 			'current_level_name' => $current_level_name,
-			'time_display'       => $expiry_date_time,
+			'expiry_date'        => $expiry_date,
+			'expiry_time'        => $expiry_time,
 			'minimum_points'     => (int) $current_level->from_points,
 			'maximum_points'     => (int) $current_level->to_points,
 			'level_id'           => (int) $existing_record->upgraded_level_id,
