@@ -84,6 +84,11 @@ class GracePeriodController {
 			return (int) $points_to_eval;
 		}
 		$locked_rank = isset( $rank_by_id[ $grace_record->upgraded_level_id ] ) ? $rank_by_id[ $grace_record->upgraded_level_id ] : - 1; // -1 for no level or level rank is returned
+		if ( $locked_rank < 0 ) {
+			self::deleteGracePeriodRecord( $grace_record->id );
+
+			return (int) $points_to_eval;
+		}
 		// If upgraded above locked during active grace, update locked and reset grace (inactive)
 		if ( self::shouldUpdateLockedLevel( $current_level_rank, $locked_rank ) ) {
 			self::updateGracePeriodRecord( $grace_record->id, [
@@ -134,6 +139,11 @@ class GracePeriodController {
 			return (int) $points_to_eval;
 		}
 		$locked_rank = isset( $rank_by_id[ $grace_record->upgraded_level_id ] ) ? $rank_by_id[ $grace_record->upgraded_level_id ] : - 1;
+		if ( $locked_rank < 0 ) {
+			self::deleteGracePeriodRecord( $grace_record->id );
+
+			return (int) $points_to_eval;
+		}
 		//if degrading below locked, activate and maintain locked
 		if ( self::shouldActivateGracePeriod( $current_level_rank, $locked_rank ) ) {
 			$grace_period_days = (int) Controller::getSetting( 'grace_period_days',
