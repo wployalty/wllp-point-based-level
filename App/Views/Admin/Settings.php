@@ -5,13 +5,13 @@ if ( ! isset( $options ) ) {
 	return;
 }
 
-$level_based_on_options = \WLLP\App\Controllers\Controller::levelBasedOnOptions() ?? [];
-$purchase_time_list     = \WLLP\App\Controllers\Controller::purchaseTimeList() ?? [];
+$wllp_level_based_on_options = \WLLP\App\Controllers\Controller::levelBasedOnOptions() ?? [];
+$wllp_purchase_time_list     = \WLLP\App\Controllers\Controller::purchaseTimeList() ?? [];
 
-$levels_from_which_point_based = $options['levels_from_which_point_based'] ?? \WLLP\App\Helpers\Util::getDefaults( 'levels_from_which_point_based' );
-$order_duration                = $options['order_duration'] ?? '';
-$grace_period_enabled          = $options['grace_period_enabled'] ?? \WLLP\App\Helpers\Util::getDefaults( 'grace_period_enabled' );
-$grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Helpers\Util::getDefaults( 'grace_period_days' );
+$wllp_levels_from_which_point_based = $options['levels_from_which_point_based'] ?? \WLLP\App\Helpers\Util::getDefaults( 'levels_from_which_point_based' );
+$wllp_order_duration                = $options['order_duration'] ?? '';
+$wllp_grace_period_enabled          = $options['grace_period_enabled'] ?? \WLLP\App\Helpers\Util::getDefaults( 'grace_period_enabled' );
+$wllp_grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Helpers\Util::getDefaults( 'grace_period_days' );
 
 ?>
 <div id="wllp-main">
@@ -19,7 +19,7 @@ $grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Help
         <h1><?php echo esc_html__( 'WPLoyalty - Level Options', 'wllp-point-based-level' ); ?> </h1>
         <div><b><?php echo "v" . WLLP_PLUGIN_VERSION; ?></b></div>
     </div>
-    <div class="wllp-grace-period-warning" style="<?php if ( $grace_period_enabled != 1 )
+    <div class="wllp-grace-period-warning" style="<?php if ( $wllp_grace_period_enabled != 1 )
 		echo 'display: none;' ?>">
         <div class="wllp-notice-header">
             <b><?php echo wp_kses_post( __(
@@ -70,10 +70,10 @@ $grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Help
                                 <div class="wllp-input-field">
                                     <select class="wllp-level-points-based" name="levels_from_which_point_based">
 										<?php
-										foreach ( $level_based_on_options as $key => $name ) {
+										foreach ( $wllp_level_based_on_options as $wllp_key => $wllp_name ) {
 											?>
-                                            <option value="<?php echo esc_attr( $key ); ?>" <?php echo $levels_from_which_point_based == $key ? 'selected="selected"' : ''; ?>>
-												<?php echo esc_html( $name ); ?>
+                                            <option value="<?php echo esc_attr( $wllp_key ); ?>" <?php echo $wllp_levels_from_which_point_based == $wllp_key ? 'selected="selected"' : ''; ?>>
+												<?php echo esc_html( $wllp_name ); ?>
                                             </option>
 											<?php
 										}
@@ -81,13 +81,13 @@ $grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Help
                                     </select>
                                 </div>
                                 <div class="wllp-order-field-inputs"
-                                     style="<?php if ( $levels_from_which_point_based != 'from_order_total' )
+                                     style="<?php if ( $wllp_levels_from_which_point_based != 'from_order_total' )
 									     echo 'display: none;' ?>">
                                     <div class="wllp-order-time-input">
                                         <select name="order_duration">
-											<?php foreach ( $purchase_time_list as $list ) { ?>
-                                                <option value="<?php echo esc_attr( $list['value'] ); ?>" <?php echo $order_duration == $list['value'] ? 'selected="selected"' : ''; ?>>
-													<?php echo esc_html( $list['label'] ); ?>
+											<?php foreach ( $wllp_purchase_time_list as $wllp_list ) { ?>
+                                                <option value="<?php echo esc_attr( $wllp_list['value'] ); ?>" <?php echo $wllp_order_duration == $wllp_list['value'] ? 'selected="selected"' : ''; ?>>
+													<?php echo esc_html( $wllp_list['label'] ); ?>
                                                 </option>
 											<?php } ?>
                                         </select>
@@ -96,13 +96,13 @@ $grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Help
                             </div>
                             <div class="wllp-field-block wllp-grace-period-section"
                                  style="<?php if ( ! in_array(
-								     $levels_from_which_point_based,
+								     $wllp_levels_from_which_point_based,
 								     [ 'from_current_balance', 'from_points_redeemed', 'from_total_earned_points' ]
 							     ) )
 								     echo 'display: none;' ?>">
                                 <div class="wllp-grace-period-checkbox-container">
                                     <input type="checkbox" name="grace_period_enabled"
-                                           value="1" <?php echo $grace_period_enabled == 1 ? 'checked="checked"' : ''; ?>
+                                           value="1" <?php echo $wllp_grace_period_enabled == 1 ? 'checked="checked"' : ''; ?>
                                            class="wllp-grace-period-checkbox" id="wllp-grace-period-checkbox">
                                     <label for="wllp-grace-period-checkbox" class="wllp-grace-period-checkbox-label">
 										<?php esc_html_e(
@@ -117,11 +117,12 @@ $grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Help
 											'wllp-point-based-level'
 										); ?></p>
                                 </div>
-                                <div class="wllp-grace-period-days-input" style="<?php if ( $grace_period_enabled != 1 )
-									echo 'display: none;' ?>">
+                                <div class="wllp-grace-period-days-input"
+                                     style="<?php if ( $wllp_grace_period_enabled != 1 )
+									     echo 'display: none;' ?>">
                                     <div class="wllp-grace-period-input-container">
                                         <input type="number" name="grace_period_days" id="grace_period_days"
-                                               value="<?php echo esc_attr( $grace_period_days ); ?>" min="1"
+                                               value="<?php echo esc_attr( $wllp_grace_period_days ); ?>" min="1"
                                                max="<?php echo esc_attr( apply_filters( 'wllp_max_grace_period_days',
 											       365 ) ); ?>"
                                                class="wllp-grace-period-days">

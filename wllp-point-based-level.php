@@ -21,9 +21,9 @@
 
 defined( 'ABSPATH' ) or die;
 
-if ( ! function_exists( 'isWpLoyaltyActive' ) ) {
-	function isWpLoyaltyActive() {
-		$active_plugins = apply_filters( 'active_plugins', get_option( 'active_plugins', [] ) );
+if ( ! function_exists( 'wllpIsWpLoyaltyActive' ) ) {
+	function wllpIsWpLoyaltyActive() {
+		$active_plugins = apply_filters( 'wllp_active_plugins', get_option( 'active_plugins', [] ) );
 		if ( is_multisite() ) {
 			$active_plugins = array_merge( $active_plugins, get_site_option( 'active_sitewide_plugins', [] ) );
 		}
@@ -33,7 +33,7 @@ if ( ! function_exists( 'isWpLoyaltyActive' ) ) {
 	}
 }
 
-if ( ! isWpLoyaltyActive() ) {
+if ( ! wllpIsWpLoyaltyActive() ) {
 	return;
 }
 

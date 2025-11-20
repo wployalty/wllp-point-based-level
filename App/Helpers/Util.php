@@ -53,7 +53,7 @@ class Util {
 
 		return $defaults[ $key ] ?? null;
 	}
-	
+
 	public static function beforeDisplayDate( $date, $format = '' ) {
 		if ( empty( $format ) ) {
 			$format = get_option( 'date_format', 'Y-m-d H:i:s' );
@@ -66,7 +66,7 @@ class Util {
 		}
 
 		$converted_time = self::convert_utc_to_wp_time( gmdate( 'Y-m-d H:i:s', $date ), $format );
-		if ( apply_filters( 'wlr_translate_display_date', true ) ) {
+		if ( apply_filters( 'wllp_translate_display_date', true ) ) {
 			$datetime = DateTime::createFromFormat( $format, $converted_time );
 			if ( $datetime !== false ) {
 				$time = $datetime->getTimestamp();
