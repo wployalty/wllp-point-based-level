@@ -414,6 +414,14 @@ class Actions {
 		];
 		$current_level = $levels_model->getQueryData( $where, '*', [], true );
 
+		if ( ! is_object( $current_level ) || ! isset( $current_level->id ) || (int) $current_level->id <= 0 ) {
+			return;
+		}
+
+		if ( ! isset( $current_level->active ) || (int) $current_level->active !== 1 ) {
+			return;
+		}
+
 		$current_level_name = is_object( $current_level ) && isset( $current_level->name ) ? $current_level->name : '';
 		$date_format        = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
 		$expiry_date_time   = Util::beforeDisplayDate( $valid_until, $date_format );
