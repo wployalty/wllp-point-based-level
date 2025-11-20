@@ -23,7 +23,7 @@ $grace_period_days             = $options['grace_period_days'] ?? \WLLP\App\Help
 		echo 'display: none;' ?>">
         <div class="wllp-notice-header">
             <b><?php echo wp_kses_post( __(
-					"Note: Create the required levels before enabling the Grace Period. After enabling the Grace Period, you cannot change the levels. If you do, the Grace Period resets for all users.",
+					"Note: Please set up all required levels before enabling the Grace Period. After the Grace Period is enabled, any level changes will reset the Grace Period for all users.",
 					'wllp-point-based-level'
 				) ) ?></b>
         </div>
