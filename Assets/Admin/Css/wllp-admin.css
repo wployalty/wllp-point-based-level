@@ -4,11 +4,13 @@
     background-color: rgb(248, 248, 252);
     padding: 0 2rem 2rem 2rem;
 }
+
 #wllp-main .wllp-main-header {
     display: flex;
     width: 100%;
     align-items: center;
 }
+
 #wllp-main .wllp-main-header h1 {
     color: rgb(22, 31, 49);
     font-weight: 700;
@@ -16,6 +18,7 @@
     line-height: 1.75rem;
     min-width: max-content;
 }
+
 #wllp-main .wllp-main-header div {
     position: relative;
     z-index: 10;
@@ -27,6 +30,7 @@
     margin-right: 0.5rem;
     margin-left: 0.5rem;
 }
+
 #wllp-main .wllp-tabs {
     display: flex;
     position: relative;
@@ -34,6 +38,7 @@
     width: 100%;
     align-items: center;
 }
+
 #wllp-main .wllp-tabs a {
     display: flex;
     height: 48px;
@@ -48,36 +53,43 @@
     font-size: 1rem;
     gap: 5px;
 }
+
 #wllp-main .wllp-tabs a:hover {
     background-color: rgb(255, 255, 255);
     color: #4F47EB;
     border: 1px solid #E7E7EF;
     border-bottom-color: rgb(255, 255, 255);
 }
+
 #wllp-main .wllp-tabs a i {
     font-size: 1.25rem;
 }
+
 #wllp-main .wllp-tabs .nav-tab-active {
     background-color: rgb(255, 255, 255);
     color: #4F47EB;
     border: 1px solid #E7E7EF;
     border-bottom-color: rgb(255, 255, 255);
 }
+
 #wllp-main #wllp-settings .wllp-setting-page-holder {
     background: #FFFFFF;
     border: 1px solid #E7E7EF;
     border-radius: 0 8px 8px 8px;
     min-height: 80vh;
 }
+
 #wllp-main #wllp-settings .wllp-settings-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin: 10px 10px 0 16px;
 }
+
 #wllp-main #wllp-settings .wllp-settings-header .wllp-setting-heading {
     margin-left: 10px;
 }
+
 #wllp-main #wllp-settings .wllp-settings-header .wllp-setting-heading p {
     font-style: normal;
     font-weight: 700;
@@ -85,6 +97,7 @@
     line-height: 20px;
     letter-spacing: 0.08em;
 }
+
 #wllp-main #wllp-settings .wllp-button-block {
     display: flex;
     gap: 10px;
@@ -92,6 +105,7 @@
     align-items: center;
     white-space: nowrap;
 }
+
 #wllp-main #wllp-settings .wllp-setting-body .wllp-settings-body-content {
     background: #FFFFFF;
     border: 1px solid #E7E7EF;
@@ -103,14 +117,17 @@
     flex-direction: column;
     gap: 25px;
 }
+
 #wllp-main #wllp-settings .wllp-field-block {
     display: flex;
     gap: 3%;
     align-items: center;
 }
+
 #wllp-main #wllp-settings .wllp-field-block select {
     min-width: 10rem;
 }
+
 #wllp-main #wllp-settings .wllp-button a {
     display: flex;
     border-radius: 6px;
@@ -128,10 +145,90 @@
     color: #4F47EB;
     gap: 7px;
 }
+
 #wllp-main #wllp-settings .wllp-button a:not(.back-to-apps) {
     background-color: rgb(79, 71, 235);
     color: rgb(255, 255, 255);
 }
+
 .wllp-settings-enable-conversion-label {
     font-size: 14px;
+}
+
+#wllp-main .wllp-notice-header {
+    background: rgb(255, 226, 146);
+    border: 2px solid #ffba00;
+    border-radius: 5px;
+    padding: 1rem;
+    margin: 1rem 0;
+    font-size: 14px;
+    text-align: left;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-section {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-checkbox {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #1a73e8;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-checkbox-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: #161f31;
+    cursor: pointer;
+    margin: 0;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-explanation {
+    margin-left: 26px;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-explanation p {
+    font-size: 14px;
+    font-weight: 400;
+    color: #535863;
+    margin: 0;
+    line-height: 1.4;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-input-container {
+    margin-left: 26px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-days {
+    width: 80px;
+    height: 36px;
+    padding: 8px 12px;
+    border: 1px solid #e7e7ef;
+    border-radius: 6px;
+    background: #ffffff;
+    font-size: 14px;
+    font-weight: 400;
+    box-shadow: none;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+#wllp-main #wllp-settings .wllp-grace-period-days:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
 }
