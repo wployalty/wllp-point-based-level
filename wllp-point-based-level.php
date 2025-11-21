@@ -3,7 +3,7 @@
  * Plugin Name: WPLoyalty - Level Options
  * Plugin URI: https://www.wployalty.net
  * Description: The add-on helps you customize levels or tiers based on specific options.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: Wployalty
  * Slug: wllp-point-based-level
  * Requires Plugins: woocommerce,wp-loyalty-rules
@@ -48,7 +48,7 @@ defined( 'WLLP_MINIMUM_PHP_VERSION' ) or define( 'WLLP_MINIMUM_PHP_VERSION', '7.
 defined( 'WLLP_MINIMUM_WP_VERSION' ) or define( 'WLLP_MINIMUM_WP_VERSION', '6.0' );
 defined( 'WLLP_MINIMUM_WC_VERSION' ) or define( 'WLLP_MINIMUM_WC_VERSION', '6.5' );
 defined( 'WLLP_MINIMUM_WLR_VERSION' ) or define( 'WLLP_MINIMUM_WLR_VERSION', '1.4.3' );
-defined( 'WLLP_PLUGIN_VERSION' ) or define( 'WLLP_PLUGIN_VERSION', '1.0.1' );
+defined( 'WLLP_PLUGIN_VERSION' ) or define( 'WLLP_PLUGIN_VERSION', '1.0.2' );
 defined( 'WLLP_PLUGIN_SLUG' ) or define( 'WLLP_PLUGIN_SLUG', 'wllp-point-based-level' );
 defined( 'WLLP_PLUGIN_FILE' ) or define( 'WLLP_PLUGIN_FILE', __FILE__ );
 defined( 'WLLP_PLUGIN_PATH' ) or define( 'WLLP_PLUGIN_PATH', str_replace( '\\', '/', __DIR__ ) . '/' );
