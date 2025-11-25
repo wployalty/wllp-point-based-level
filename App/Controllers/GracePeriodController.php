@@ -185,15 +185,15 @@ class GracePeriodController {
 	}
 
 	private static function shouldActivateGracePeriod( $current_rank, $locked_rank ): bool {
-		return $current_rank > 0 && $locked_rank > 0 && $current_rank < $locked_rank;
+		return $current_rank >= 0 && $locked_rank >= 0 && $current_rank < $locked_rank;
 	}
 
 	private static function shouldUpdateLockedLevel( $current_rank, $locked_rank ): bool {
-		return $current_rank > 0 && $locked_rank > 0 && $current_rank > $locked_rank;
+		return $current_rank >= 0 && $locked_rank >= 0 && $current_rank > $locked_rank;
 	}
 
 	private static function shouldMaintainLockedLevel( $current_rank, $locked_rank ): bool {
-		return $current_rank > 0 && $locked_rank > 0 && $current_rank === $locked_rank;
+		return $current_rank >= 0 && $locked_rank >= 0 && $current_rank === $locked_rank;
 	}
 
 	private static function isAboveMaxLevel( $points ): bool {
