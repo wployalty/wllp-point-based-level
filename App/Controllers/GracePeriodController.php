@@ -144,8 +144,10 @@ class GracePeriodController {
 
 			return (int) $points_to_eval;
 		}
+		$locked_level_min_points = self::getLevelMinPoints( $grace_record->upgraded_level_id );
 		//if degrading below locked, activate and maintain locked
-		if ( self::shouldActivateGracePeriod( $current_level_rank, $locked_rank ) ) {
+		if ( self::shouldActivateGracePeriod( $current_level_rank,
+				$locked_rank ) && (int) $points_to_eval < $locked_level_min_points ) {
 			$grace_period_days = (int) Controller::getSetting( 'grace_period_days',
 				Util::getDefaults( 'grace_period_days' ) );
 			if ( $grace_period_days > 0 ) {
